@@ -13,15 +13,40 @@ structure To (U : T) where
   V : T
   f : V ⟶ U
 
+-- This is probably in Mathlib, but I couldn't find it.
+structure PullbackOf (f : To U) (g : To U) where
+  pullback : T
+  fst : pullback ⟶ f.V
+  snd : pullback ⟶ g.V
+  is_pullback : IsPullback fst snd f.f g.f
+
+def pullback_snd {f g : To U} (square : PullbackOf f g)
+  := To.mk square.pullback square.snd
+
 -- A family of morphisms with target U in C.
-def Cover (U : T) := Set (To U)
+def Cover {T : Type} [Category T] (U : T) := Set (To U)
+
+-- Why TF is this necessary???
+-- Shouldn't Cover U immediately reduce to Set (To U)?
+def coerce (cover : Cover U) : Set (To U) := cover
+instance : Membership (To U) (Cover U) where
+  mem (cover : Cover U) (f : To U) := f ∈ coerce cover
+
+def Coverage (T : Type) [Category T] := ∀ {U : T}, Set (Cover U)
+
+structure CoverIn (coverage : Coverage T) where
+  obj : T
+  cover : Cover obj
+  in_coverage : cover ∈ coverage
+
+structure CoverObj (cover : Cover U) where
+  obj : T
+  f : obj ⟶ U
+  in_cover : To.mk obj f ∈ cover
 
 -- A cover defined by a set of morphisms from a single source.
 def single_source_cover (M : Set (V ⟶ U)) : Cover U
   := { f : To U | ∃ (p : f.V = V), match p with | Eq.refl f.V => f.f ∈ M }
-
-def InCover (cover : Cover U) (V : T) : Prop
-  := ∃ (f : V ⟶ U), cover (To.mk V f)
 
 inductive Lift (P : Prop) : Type where
 | lift (p : P) : Lift P
@@ -34,27 +59,26 @@ class Site (T : Type) extends Category T where
     single_source_cover { f : V ⟶ U | f = Iso.hom iso } ∈ coverage
   -- Transitivity/composition of covers.
   compose :
-    ∀ {U : T} (u_cover : Cover U), u_cover ∈ coverage →
-    ∀ (v_covers : ∀ {V : T}, InCover u_cover V → Cover V),
-    (∀ {V} (v_in_cover : InCover u_cover V), v_covers v_in_cover ∈ coverage) →
+    ∀ (cover : CoverIn coverage)
+    (pre_covers : ∀ (V : CoverObj cover.cover), Cover V.obj),
+    (∀ (V : CoverObj cover.cover), pre_covers V ∈ coverage) →
     -- A morphism is in the composed cover if it is the composition
     -- of a morphism in the cover {g : Wᵢⱼ → Vᵢ) and a morphism in the
     -- cover {h : Vᵢ → U}.
-    { f : To U |
-      ∃ (h : To U) (g : f.V ⟶ h.V),
-      (h_in_cover : u_cover h) → v_covers (Exists.intro h.f h_in_cover) (To.mk f.V g) →
+    { f : To cover.obj |
+      ∃ (h : CoverObj cover.cover) (g : f.V ⟶ h.obj),
+      pre_covers h (To.mk f.V g) →
       f.f = CategoryStruct.comp g h.f } ∈ coverage
   pullback_exists :
     -- Unclear why Lean can't synthesize membership To U ∈ Cover U
     -- given that Cover U is literally defined as Set (To U).
-    ∀ {U : T} {u_cover : Set (To U)}, u_cover ∈ coverage →
+    ∀ {U : T} {u_cover : Cover U}, u_cover ∈ coverage →
     ∀ (g : To U),
     ∀ {f : To U}, f ∈ u_cover →
-    Σ (Pb : T) (fst : Pb ⟶ f.V) (snd : Pb ⟶ g.V), Lift (IsPullback fst snd f.f g.f)
-  pullbacks_cover :
-    ∀ {U : T} (u_cover : Set (To U)) (u_in_coverage : u_cover ∈ coverage),
+    PullbackOf f g
+  pullback_cover :
+    ∀ {U : T} (u_cover : Cover U) (u_in_coverage : u_cover ∈ coverage),
     ∀ (g : To U),
     { snd : To g.V |
       ∃ (f : To U) (f_in_cover : f ∈ u_cover),
-      snd = To.mk (pullback_exists u_in_coverage g f_in_cover).fst
-            (pullback_exists u_in_coverage g f_in_cover).snd.snd.fst} ∈ coverage
+      snd = pullback_snd (pullback_exists u_in_coverage g f_in_cover) } ∈ coverage
