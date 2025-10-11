@@ -1,38 +1,39 @@
 import Mathlib.CategoryTheory.Category.Basic
+import Mathlib.CategoryTheory.Comma.Over.Basic
 import Mathlib.CategoryTheory.Iso
 import Mathlib.CategoryTheory.Limits.Shapes.Pullback.CommSq
+
 open CategoryTheory
+open CategoryTheory.Limits
+
+variable {T : Type} [Category T] (U V W : T)
 
 -- A family of morphisms with target U in C.
-def Cover {Obj : Type} [Category Obj] (U : Obj)
-  := ∀ {V : Obj} (_f : V ⟶ U), Prop
+def Cover := Set (Over U)
 
 -- A cover defined by a set of morphisms from a single source.
-def single_source_cover {Obj : Type} [Category Obj] {U V : Obj} (P : (V ⟶ U) → Prop) : Cover U
-  := fun {V'} (f : V' ⟶ U) ↦ ∃ (p : V = V'), match p with | Eq.refl V => P f
-
-def InCover {Obj : Type} [Category Obj] {U : Obj} (cover : Cover U) (V : Obj) : Prop
-  := ∃ (f : V ⟶ U), cover f
+def single_source_cover (M : Set (V ⟶ U)) : Cover U
+  := { f : Over U | ∃ (p : f.left = V), match p with | Eq.refl f.left => Comma.hom f ∈ M }
 
 inductive Lift (P : Prop) : Type where
 | lift (p : P) : Lift P
 
-class Site (Obj : Type) [Category Obj] where
+class Site (T : Type) [Category T] where
   -- A set of covers for each object in C.
-  coverage : ∀ {U : Obj}, Cover U → Prop
+  coverage : ∀ {U : T}, Set (Cover U)
   -- Every isomorphism is a cover in itself.
-  identity : ∀ {U V : Obj} (iso : Iso V U),
-    coverage (single_source_cover (fun f ↦ f = Iso.hom iso))
+  identity : ∀ {U V : T} (iso : Iso V U),
+    coverage (single_source_cover { f | f = Iso.hom iso })
   -- Transitivity/composition of covers.
   compose :
-    ∀ {U : Obj} (u_cover : Cover U), coverage u_cover →
-    ∀ (v_covers : ∀ {V : Obj}, InCover u_cover V → Cover V),
+    ∀ {U : T} (u_cover : Cover U), coverage u_cover →
+    ∀ (v_covers : ∀ {V : T}, InCover u_cover V → Cover V),
     (∀ {V} (v_in_cover : InCover u_cover V), coverage (v_covers v_in_cover)) →
     -- A morphism is in the composed cover if it is the composition
     -- of a morphism in the cover {g : Wᵢⱼ → Vᵢ) and a morphism in the
     -- cover {h : Vᵢ → U}.
     coverage (fun {W} (f : W ⟶ U) ↦
-      ∃ (V : Obj) (h : V ⟶ U) (g : W ⟶ V),
+      ∃ (V : T) (h : V ⟶ U) (g : W ⟶ V),
       (h_in_cover : u_cover h) → v_covers (Exists.intro h h_in_cover) g →
       f = CategoryStruct.comp g h)
   pullback_exists :
