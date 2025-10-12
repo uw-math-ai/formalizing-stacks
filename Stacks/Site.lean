@@ -7,10 +7,6 @@ open CategoryTheory.Limits
 
 variable {C : Type} [Category C]
 
--- Workaround that probably has a better solution.
-inductive Lift (P : Prop) : Type where
-| lift (p : P)
-
 -- A morphism with destimation dst.
 structure To (dst : C) where
   src : C
@@ -41,14 +37,14 @@ structure Site (C : Type) [Category C] where
   -- the composition of the morphisms of the covers forms a cover.
   compose : ∀ dst : C, ∀ cover ∈ coverings dst,
             -- A family of covers for every object in the domain of the cover.
-            ∀ (src : ∀ f ∈ cover, Σ cover', Lift (cover' ∈ coverings f.src)),
+            ∀ (src : ∀ f ∈ cover, { cover' // cover' ∈ coverings f.src }),
             -- We're looking for morphisms that are the composition of morphisms in our covers.
             { h : To dst |
               -- A morphism in the destination cover.
               ∃ f : To dst,
               ∃ f_in_cover : f ∈ cover,
               -- A morphism in the source cover.
-              ∃ g ∈ (src f f_in_cover).fst,
+              ∃ g ∈ (src f f_in_cover).val,
               -- h is a composition of the morphisms.
               h = To.mk g.src (CategoryStruct.comp g.f f.f)
              } ∈ coverings dst
