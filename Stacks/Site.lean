@@ -24,22 +24,19 @@ structure Pullback {dst : C} (f : To dst) (g : To dst) where
   is_pullback : IsPullback fst snd f.f g.f
 
 -- A family or morphisms with destination dst.
-def Cover (dst : C) := Set (To dst)
+abbrev Cover (dst : C) := Set (To dst)
 
 -- A collection of covers for every object in the category.
-def Coverings (C : Type) [Category C] := ∀ (dst : C), Set (Cover dst)
+abbrev Coverings (C : Type) [Category C] := ∀ (dst : C), Set (Cover dst)
 
--- Support `f ∈ cover` syntax. Since Cover is literally defined as a set,
--- I have no idea why Lean isn't figuring this out automatically.
-def coerce_cover {dst : C} (cover : Cover dst) : Set (To dst) := cover
-instance {dst : C} : Membership (To dst) (Cover dst) where
-  mem cover dst := dst ∈ coerce_cover cover
+-- The collection of objects that are sources of some morphism in a cover.
+abbrev cover_domain {dst : C} (cover : Cover dst) : Set C
+  := { src : C | ∃ f ∈ cover, src = f.src }
 
-class Site (C : Type) extends Category C where
+structure Site (C : Type) [Category C] where
   coverings : Coverings C
   -- Isomorphisms are covers unto themselves..
-  iso : ∀ (src dst : C) (iso : Iso src dst),
-        { f : To dst | f = To.mk src iso.hom } ∈ coverings dst
+  iso : ∀ (src dst : C) (iso : Iso src dst), { To.mk src iso.hom } ∈ coverings dst
   -- Given a cover of 'dst' and a cover for every object 'mid' in the domain of dst,
   -- the composition of the morphisms of the covers forms a cover.
   compose : ∀ dst : C, ∀ cover ∈ coverings dst,
