@@ -68,12 +68,12 @@ instance instCategoryXZar.{u} {C : Type u} [TopologicalSpace C] [Quiver (@Obj C 
   id X := id
   comp hom_xy hom_xz := hom_xz ∘ hom_xy
 
-structure Prod.{v} {C : Type v} [TopologicalSpace C] [Category.{v + 1, v} (@Obj.{v} C _)]
+structure Prod.{v} {C : Type v} [TopologicalSpace C] [h : Category.{v + 1, v} (@Obj.{v} C _)]
   (X Y : @Obj.{v} C _) where
   P        : @Obj.{v} C _ := { x := X.x ∩ Y.x, h_open := IsOpen.inter X.h_open Y.h_open }
   π₁       : P ⟶ X
   π₂       : P ⟶ Y
-  is_limit : @IsLimit.{v + 1, v + 1, v, v} (@Obj C _) _ _  _ _ (@BinaryFan.mk.{v, v} (@Obj C _) _ X Y P π₁ π₂)
+  is_limit : IsLimit (@BinaryFan.mk.{v, v} (@Obj C _) _ X Y P π₁ π₂)
 
 instance instHasBinaryProductsXZar.{u} {C : Type u} [TopologicalSpace C] [Quiver (@Obj C _)] [Category (@Obj C _)] :
   HasBinaryProducts (@Obj C _) where
