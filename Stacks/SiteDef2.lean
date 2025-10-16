@@ -8,7 +8,7 @@ open CategoryTheory (Iso)
 /-
 A definition of a site that attempts to use as much from mathlib as possible.
 I also attempt to use encodings more native to type theory.
-I fall back to Set notation if no "type-theoretic" encoding is possible.
+I think this definition is quite concise, but let me know if anything is wrong.
 -/
 
 namespace CategoryTheory
@@ -16,10 +16,13 @@ namespace CategoryTheory
 inductive Site.Covering.{v, u} {C : Type u}
   [Category.{v, u} C] [Limits.HasBinaryProducts.{v, u} C] :
   C → C → Prop
+  -- Axiom 1
   | iso   (X Y      : C) : Iso X Y → Site.Covering X Y
+  -- Axiom 2
   | trans (X Y Z    : C) : Site.Covering X Y
     → Site.Covering Y Z
     → Site.Covering X Z
+  -- Axiom 3
   | prod (X Y Z XZ  : C) : Site.Covering Y Z
     → Nonempty (X ⟶ Z)
     → Limits.HasBinaryProduct Y XZ
