@@ -161,21 +161,42 @@ instance instHasBinaryProductsXZar.{u} {C : Type u} {Cat : XZarCat.{u}} :
         lift := fun cone' => by
           let hom : Hom cone'.pt cone.pt := fun cone_pt => by
             have h : Subtype (@Obj.x C Cat cone.pt) := by
-              have h_cone_pt : @Obj.x C Cat cone'.pt := cone_pt
               -- Both cones have projections
               -- and we have a map from the projections to an actual Prod
               -- which gives X ∩ Y
-              let { val, property } := h_cone_pt
-              rw [Obj.x] at property
-              let left₀ := cone'.π.app { as := .left } (by assumption)
-              let right₀ := cone'.π.app { as := .right } (by assumption)
-              rw [Obj.x] at left₀
-              rw [Obj.x] at right₀
-              rw [Obj.x]
-              change prod.P.1
-              rw [Prod.p_hom_def_eq]
-              let h : ↑(@Obj.x _ _ cone.pt ∩ @Obj.x _ _ cone'.pt) := ⟨val, ⟨left, right⟩⟩
-              sorry
+              let { val, property } := cone_pt
+              let { val := val_left, property := p_left } := cone'.π.app { as := .left } (by assumption)
+              let { val := val_right, property := p_right } := cone'.π.app { as := .right } (by assumption)
+
+              let pt := cone_pt
+              let pt_x := cone'.π.app { as := .left } (by assumption)
+              let pt_y := cone'.π.app { as := .left } (by assumption)
+
+              let prod' := Prod.mk' (obj { as := .left }) (obj { as := .right })
+
+              let hom_x := prod'.π₁
+              let hom_y := prod'.π₂
+
+              rw [Hom] at hom_x
+              rw [Hom] at hom_y
+              have h := hom_x { val := pt_x, property :=
+                (by
+                  
+                  sorry)
+              }
+              
+              -- There is an inclusion map from the Prod to its projections
+              -- therefore, we can get val ∈ X ∩ Y
+              -- by getting the projections,
+              -- then using the hom property to get the members in each sets
+              let stuff : prod.P.x := by
+                rw [Prod.p_hom_def_eq]
+                constructor
+                constructor
+                
+                sorry
+              
+              exact { val := val, property := by constructor; exact p_left; sorry }
             exact h
           exact hom
       }
