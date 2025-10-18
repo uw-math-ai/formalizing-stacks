@@ -133,22 +133,18 @@ instance instHasBinaryProductsXZar.{u} {C : Type u} {Cat : XZarCat.{u}} :
             | { as := .left }, { as := .left } => by
               simp
               funext
-              have h := map hom
               have h_id := CategoryTheory.Discrete.id_def { as := WalkingPair.left }
               have h_comp_id := CategoryTheory.Category.id_comp hom
               cases hom
-              rw [h_id]
-              rw [map_id]
+              rw [h_id, map_id]
               simp_all
             | { as := .right }, { as := .right } => by
               simp
               funext
-              have h := map hom
               have h_id := CategoryTheory.Discrete.id_def { as := WalkingPair.right }
               have h_comp_id := CategoryTheory.Category.id_comp hom
               cases hom
-              rw [h_id]
-              rw [map_id]
+              rw [h_id, map_id]
               simp_all
             | { as := .right }, { as := .left }
             | { as := .left }, { as := .right }=> by
@@ -160,27 +156,29 @@ instance instHasBinaryProductsXZar.{u} {C : Type u} {Cat : XZarCat.{u}} :
       }
 
     exact HasLimit.mk {
+      cone := cone
       isLimit := {
         lift := fun cone' => by
           let hom : Hom cone'.pt cone.pt := fun cone_pt => by
             have h : Subtype (@Obj.x C Cat cone.pt) := by
-              
-              let { pt := pt₀, π } := cone'
-              let { app, naturality } := π
-              let left' := app <| .mk WalkingPair.left
-              let right' := app <| .mk WalkingPair.right
-              let { P := P₀, π₁, π₂, p_hom_def_eq } := Prod.mk' pt₀ cone.pt
-              rw [Hom, p_hom_def_eq] at π₁
-              rw [Hom, p_hom_def_eq] at π₂
-              have { val := elem_left, property := left } := left' (by sorry)
-              
-              have { val := elem_right, property := right } := right' (by assumption)
-              let h : ↑(@Obj.x _ _ cone.pt ∩ @Obj.x _ _ cone'.pt) := ⟨elem_left, by simp_all; exact ⟨left, right⟩⟩
+              have h_cone_pt : @Obj.x C Cat cone'.pt := cone_pt
+              -- Both cones have projections
+              -- and we have a map from the projections to an actual Prod
+              -- which gives X ∩ Y
+              let { val, property } := h_cone_pt
+              rw [Obj.x] at property
+              let left₀ := cone'.π.app { as := .left } (by assumption)
+              let right₀ := cone'.π.app { as := .right } (by assumption)
+              rw [Obj.x] at left₀
+              rw [Obj.x] at right₀
+              rw [Obj.x]
+              change prod.P.1
+              rw [Prod.p_hom_def_eq]
+              let h : ↑(@Obj.x _ _ cone.pt ∩ @Obj.x _ _ cone'.pt) := ⟨val, ⟨left, right⟩⟩
               sorry
             exact h
           exact hom
       }
-      cone := cone
     }
 
 instance instSiteXZar.{u} {C : Type u} : @Site.{u} (@Obj C) instCategoryXZar _ { x := Set.univ } where
