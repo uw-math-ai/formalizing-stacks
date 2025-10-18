@@ -53,7 +53,7 @@ Example 1 from Stacks project page.
 
 namespace XZar
 
-structure Obj.{v} {C : Type v} [TopologicalSpace C] where
+class Obj.{v} {C : Type v} [TopologicalSpace C] where
   x : Set C
   h_open : IsOpen x
 
@@ -62,73 +62,83 @@ def Hom.{u} {C : Type u} [TopologicalSpace C] (X Y : @Obj C _) := X.x → Y.x
 instance Hom.instQuiver.{u} {C : Type u} [TopologicalSpace C] : Quiver.{u + 1} (@Obj.{u} C _) where
   Hom X Y := Hom X Y
 
-instance instCategoryXZar.{u} {C : Type u} [TopologicalSpace C] [Quiver.{u + 1, u} (@Obj C _)]
-  : Category.{u} (@Obj C _) where
-  Hom X Y := Hom X Y
+abbrev XZarCat.{u} {C : Type u} := TopologicalSpace.{u} C
+
+instance instCategoryXZar.{u} {C : Type u} (Cat : XZarCat.{u})
+  : Category.{u} (@Obj.{u} C Cat) where
+  Hom X Y := @Hom C Cat X Y
   id X := id
   comp hom_xy hom_xz := hom_xz ∘ hom_xy
 
-structure Prod.{v} {C : Type v} [TopologicalSpace C] [Category.{v + 1, v} (@Obj.{v} C _)]
-  (X Y : @Obj.{v} C _) where
-  P : @Obj.{v} C _ := { x := X.x ∩ Y.x, h_open := IsOpen.inter X.h_open Y.h_open }
+def PObj.{u} {C : Type u} {Cat : XZarCat.{u}}
+  (X Y : @Obj.{u} C Cat)
+  : @Obj.{u} C Cat := { x := X.x ∩ Y.x, h_open := IsOpen.inter X.h_open Y.h_open }
+
+structure Prod.{v} {C : Type v} {Cat : XZarCat.{v}}
+  (X Y : @Obj.{v} C Cat) where
+  P : @Obj.{v} C Cat := PObj X Y
   p_hom_def_eq : P.x = X.x ∩ Y.x := by
+    unfold PObj
     simp
   π₁       : P ⟶ X
   π₂       : P ⟶ Y
-  is_limit : IsLimit (@BinaryFan.mk.{v, v} (@Obj C _) _ X Y P π₁ π₂)
 
-def Prod.mk'.{v} {C : Type v} [TopologicalSpace.{v} C] [Category.{v + 1, v} (@Obj.{v} C _)] (X Y : @Obj.{v} C _): Prod.{v} X Y :=
-  let π₁ := fun inter =>
+instance instObjProd.{v} {C : Type v} {Cat : XZarCat.{v}}
+  (X Y : @Obj.{v} C Cat) (P : Prod X Y) : @Obj.{v} C Cat where
+  x := P.P.x
+  h_open := P.P.h_open
+
+def Prod.mk'.{v} {C : Type v} {Cat : XZarCat.{v}}
+  (X Y : @Obj.{v} C Cat) : Prod.{v} X Y :=
+  {
+    π₁ := fun inter =>
     by
-      simp at inter
+      unfold PObj at inter
       let { val := val_inter, property := h_inter } := inter
       have h_inclusion : val_inter ∈ X.x := Set.mem_of_mem_inter_left h_inter
       have h_coe : Subtype X.x := { val := val_inter, property := (by assumption) }
       exact h_coe
-  let π₂ := fun inter =>
+    π₂ := fun inter =>
     by
+      unfold PObj at inter
       simp at inter
       let { val := val_inter, property := h_inter } := inter
       have h_inclusion : val_inter ∈ Y.x := Set.mem_of_mem_inter_right h_inter
       have h_coe : Subtype Y.x := { val := val_inter, property := (by assumption) }
       exact h_coe
-
-  {
-    π₁ := π₁
-    π₂ := π₂
-    is_limit := IsLimit.mk
-      (fun s x => (by
-        simp
-        match h : s with
-        | .mk x₀ π =>
-          match π with
-          | ⟨mpr, mpl⟩ =>
-            let pair₁ : CategoryTheory.Discrete WalkingPair := { as := WalkingPair.left }
-            let pair₂ : CategoryTheory.Discrete WalkingPair := { as := WalkingPair.right }
-            let val_in_pair₁ := π.app pair₁ (by assumption)
-            let val_in_pair₂ := π.app pair₂ (by assumption)
-            let { val := val₁, property } := val_in_pair₁
-            let { val := val₂, property := prop₂ } := val_in_pair₂
-            have h_left : val₁ ∈ X.x := property
-            have h_right : val₂ ∈ Y.x := prop₂
-            exact ⟨val₁, ⟨h_left, h_right⟩⟩
-            ))
-      sorry
-      sorry
   }
 
-instance instHasBinaryProductsXZar.{u} {C : Type u} [TopologicalSpace C] [Quiver (@Obj C _)] [Category (@Obj C _)] :
-  HasBinaryProducts (@Obj C _) where
-  has_limit F : HasLimit F := HasLimit.mk {
-    isLimit := {
-      lift := sorry
-    }
-    cone := {
-      pt := { x := Set.univ, h_open := isOpen_univ },
-      π  := {
-        app X := by
-          
-          sorry
+instance instHasBinaryProductsXZar.{u} {C : Type u} {Cat : XZarCat.{u}} :
+  HasBinaryProducts.{u, u} (@Obj C Cat) where
+  has_limit F : HasLimit F := by
+    let { obj, map, map_id, map_comp } := F
+    let f_π₁ := CategoryTheory.Discrete.mk WalkingPair.left
+    let f_π₂ := CategoryTheory.Discrete.mk WalkingPair.left
+
+    let left := obj f_π₁
+    let right := obj f_π₂
+
+    let P : @Obj C _ := { x := left.x ∩ right.x, h_open := IsOpen.inter left.h_open right.h_open }
+
+    let prod := Prod.mk' left right
+
+    exact HasLimit.mk {
+      isLimit := {
+        lift := fun cone => by
+          simp
+          let hom : Hom cone.pt P := fun cone_pt => by
+            constructor
+            
+            sorry
+          exact hom
+      }
+      cone := {
+        pt := P,
+        π  := {
+          app X := by
+            
+            sorry
+        }
       }
     }
   }
