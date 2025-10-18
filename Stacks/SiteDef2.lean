@@ -140,9 +140,22 @@ instance instHasBinaryProductsXZar.{u} {C : Type u} {Cat : XZarCat.{u}} :
               rw [h_id]
               rw [map_id]
               simp_all
-            | { as := .right }, { as := .right } => sorry
-            | { as := .right }, { as := .left } => sorry
-            | { as := .left }, { as := .right } => sorry)
+            | { as := .right }, { as := .right } => by
+              simp
+              funext
+              have h := map hom
+              have h_id := CategoryTheory.Discrete.id_def { as := WalkingPair.right }
+              have h_comp_id := CategoryTheory.Category.id_comp hom
+              cases hom
+              rw [h_id]
+              rw [map_id]
+              simp_all
+            | { as := .right }, { as := .left }
+            | { as := .left }, { as := .right }=> by
+              match hom with
+              | .up h =>
+                cases h
+                contradiction)
         }
       }
 
