@@ -68,7 +68,14 @@ instance instCategoryXZar.{u} {C : Type u} (Cat : XZarCat.{u})
   : Category.{u} (@Obj.{u} C Cat) where
   Hom X Y := @Hom.{u} C Cat X Y |> PLift.{0} |> ULift
   id X := ⟨⟨.rfl⟩⟩
-  comp hom_xy hom_xz := hom_xz ∘ hom_xy
+  comp hom_xy hom_xz := by
+    constructor
+    constructor
+    match hom_xy, hom_xz with
+    | .up (.up hom_yz), .up (.up hom_xz) =>
+      rw [Hom] at hom_yz
+      rw [Hom] at hom_xz
+      exact Set.Subset.trans hom_yz hom_xz
 
 def PObj.{u} {C : Type u} {Cat : XZarCat.{u}}
   (X Y : @Obj.{u} C Cat)
