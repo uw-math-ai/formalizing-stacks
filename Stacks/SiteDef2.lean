@@ -80,8 +80,8 @@ structure Prod.{v} {C : Type v} {Cat : XZarCat.{v}}
   p_hom_def_eq : P.x = X.x ∩ Y.x := by
     unfold PObj
     simp
-  π₁       : P ⟶ X
-  π₂       : P ⟶ Y
+  π₁       : Hom P X
+  π₂       : Hom P Y
 
 instance instObjProd.{v} {C : Type v} {Cat : XZarCat.{v}}
   (X Y : @Obj.{v} C Cat) (P : Prod X Y) : @Obj.{v} C Cat where
@@ -94,6 +94,7 @@ def Prod.mk'.{v} {C : Type v} {Cat : XZarCat.{v}}
     π₁ := fun inter =>
     by
       unfold PObj at inter
+      simp at inter
       let { val := val_inter, property := h_inter } := inter
       have h_inclusion : val_inter ∈ X.x := Set.mem_of_mem_inter_left h_inter
       have h_coe : Subtype X.x := { val := val_inter, property := (by assumption) }
@@ -118,30 +119,53 @@ instance instHasBinaryProductsXZar.{u} {C : Type u} {Cat : XZarCat.{u}} :
     let left := obj f_π₁
     let right := obj f_π₂
 
-    let P : @Obj C _ := { x := left.x ∩ right.x, h_open := IsOpen.inter left.h_open right.h_open }
-
     let prod := Prod.mk' left right
+
+    let cone : Cone { obj := obj, map := map, map_id := map_id, map_comp := map_comp } := {
+        pt := prod.P,
+        π  := {
+          app direction := (by
+            cases direction
+            case mk as =>
+              cases as
+              case left =>
+                simp
+                exact (fun h => by
+                  let left := prod.π₁ (by assumption)
+                  have { val, property } := left
+                  exact { val := val, property := property })
+              case right =>
+                simp
+                exact (fun h => by
+                  let right := prod.π₂ (by assumption)
+                  have { val, property } := right
+                  exact { val := val, property := property }))
+        }
+      }
 
     exact HasLimit.mk {
       isLimit := {
-        lift := fun cone => by
-          simp
-          let hom : Hom cone.pt P := fun cone_pt => by
-            constructor
-            
-            sorry
+        lift := fun cone' => by
+          let hom : Hom cone'.pt cone.pt := fun cone_pt => by
+            have h : Subtype (@Obj.x C Cat cone.pt) := by
+              
+              let { pt := pt₀, π } := cone'
+              let { app, naturality } := π
+              let left' := app <| .mk WalkingPair.left
+              let right' := app <| .mk WalkingPair.right
+              let { P := P₀, π₁, π₂, p_hom_def_eq } := Prod.mk' pt₀ cone.pt
+              rw [Hom, p_hom_def_eq] at π₁
+              rw [Hom, p_hom_def_eq] at π₂
+              have { val := elem_left, property := left } := left' (by sorry)
+              
+              have { val := elem_right, property := right } := right' (by assumption)
+              let h : ↑(@Obj.x _ _ cone.pt ∩ @Obj.x _ _ cone'.pt) := ⟨elem_left, by simp_all; exact ⟨left, right⟩⟩
+              sorry
+            exact h
           exact hom
       }
-      cone := {
-        pt := P,
-        π  := {
-          app X := by
-            
-            sorry
-        }
-      }
+      cone := cone
     }
-  }
 
 instance instSiteXZar.{u} {C : Type u} : @Site.{u} (@Obj C) instCategoryXZar _ { x := Set.univ } where
   sorry
