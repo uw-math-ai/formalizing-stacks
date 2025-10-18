@@ -57,17 +57,17 @@ class Obj.{v} {C : Type v} [TopologicalSpace C] where
   x : Set C
   h_open : IsOpen x
 
-def Hom.{u} {C : Type u} [TopologicalSpace C] (X Y : @Obj C _) := X.x ⊆ Y.x → Sort u
+def Hom.{u} {C : Type u} [TopologicalSpace C] (X Y : @Obj C _) := X.x ⊆ Y.x
 
 instance Hom.instQuiver.{u} {C : Type u} [TopologicalSpace C] : Quiver.{u + 1} (@Obj.{u} C _) where
-  Hom X Y := Hom.{u} X Y
+  Hom X Y := Hom.{u} X Y |> PLift.{0} |> ULift
 
 abbrev XZarCat.{u} {C : Type u} := TopologicalSpace.{u} C
 
 instance instCategoryXZar.{u} {C : Type u} (Cat : XZarCat.{u})
   : Category.{u} (@Obj.{u} C Cat) where
-  Hom X Y := @Hom C Cat X Y
-  id X := id
+  Hom X Y := @Hom.{u} C Cat X Y |> PLift.{0} |> ULift
+  id X := ⟨⟨.rfl⟩⟩
   comp hom_xy hom_xz := hom_xz ∘ hom_xy
 
 def PObj.{u} {C : Type u} {Cat : XZarCat.{u}}
