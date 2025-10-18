@@ -114,7 +114,7 @@ instance instHasBinaryProductsXZar.{u} {C : Type u} {Cat : XZarCat.{u}} :
   has_limit F : HasLimit F := by
     let { obj, map, map_id, map_comp } := F
     let f_π₁ := CategoryTheory.Discrete.mk WalkingPair.left
-    let f_π₂ := CategoryTheory.Discrete.mk WalkingPair.left
+    let f_π₂ := CategoryTheory.Discrete.mk WalkingPair.right
 
     let left := obj f_π₁
     let right := obj f_π₂
@@ -124,22 +124,25 @@ instance instHasBinaryProductsXZar.{u} {C : Type u} {Cat : XZarCat.{u}} :
     let cone : Cone { obj := obj, map := map, map_id := map_id, map_comp := map_comp } := {
         pt := prod.P,
         π  := {
-          app direction := (by
-            cases direction
-            case mk as =>
-              cases as
-              case left =>
-                simp
-                exact (fun h => by
-                  let left := prod.π₁ (by assumption)
-                  have { val, property } := left
-                  exact { val := val, property := property })
-              case right =>
-                simp
-                exact (fun h => by
-                  let right := prod.π₂ (by assumption)
-                  have { val, property } := right
-                  exact { val := val, property := property }))
+          app direction := (
+            match direction with
+            | { as := .left } => fun h => prod.π₁ h
+            | { as := .right } => fun h => prod.π₂ h
+            ),
+          naturality dir₁ dir₂ hom := (match dir₁, dir₂ with
+            | { as := .left }, { as := .left } => by
+              simp
+              funext
+              have h := map hom
+              have h_id := CategoryTheory.Discrete.id_def { as := WalkingPair.left }
+              have h_comp_id := CategoryTheory.Category.id_comp hom
+              cases hom
+              rw [h_id]
+              rw [map_id]
+              simp_all
+            | { as := .right }, { as := .right } => sorry
+            | { as := .right }, { as := .left } => sorry
+            | { as := .left }, { as := .right } => sorry)
         }
       }
 
