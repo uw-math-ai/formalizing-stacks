@@ -98,22 +98,16 @@ instance instObjProd.{v} {C : Type v} {Cat : XZarCat.{v}}
 def Prod.mk'.{v} {C : Type v} {Cat : XZarCat.{v}}
   (X Y : @Obj.{v} C Cat) : Prod.{v} X Y :=
   {
-    π₁ := fun inter =>
+    π₁ := fun inter h_subst =>
     by
-      unfold PObj at inter
-      simp at inter
-      let { val := val_inter, property := h_inter } := inter
-      have h_inclusion : val_inter ∈ X.x := Set.mem_of_mem_inter_left h_inter
-      have h_coe : Subtype X.x := { val := val_inter, property := (by assumption) }
-      exact h_coe
-    π₂ := fun inter =>
+      unfold Obj.x at h_subst
+      unfold PObj at h_subst
+      exact Set.mem_of_mem_inter_left (by assumption)
+    π₂ := fun inter h_subst =>
     by
-      unfold PObj at inter
-      simp at inter
-      let { val := val_inter, property := h_inter } := inter
-      have h_inclusion : val_inter ∈ Y.x := Set.mem_of_mem_inter_right h_inter
-      have h_coe : Subtype Y.x := { val := val_inter, property := (by assumption) }
-      exact h_coe
+      unfold Obj.x at h_subst
+      unfold PObj at h_subst
+      exact Set.mem_of_mem_inter_right (by assumption)
   }
 
 instance instHasBinaryProductsXZar.{u} {C : Type u} {Cat : XZarCat.{u}} :
