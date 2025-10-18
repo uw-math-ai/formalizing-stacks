@@ -127,13 +127,18 @@ instance instHasBinaryProductsXZar.{u} {C : Type u} {Cat : XZarCat.{u}} :
         π  := {
           app direction := (
             match direction with
-            | { as := .left } => fun h => prod.π₁ h
-            | { as := .right } => fun h => prod.π₂ h
+            | { as := .left } => by
+              repeat constructor
+              change left.x ∩ right.x ⊆ left.x
+              simp
+            | { as := .right } => by
+              repeat constructor
+              change left.x ∩ right.x ⊆ right.x
+              simp
             ),
           naturality dir₁ dir₂ hom := (match dir₁, dir₂ with
             | { as := .left }, { as := .left } => by
               simp
-              funext
               have h_id := CategoryTheory.Discrete.id_def { as := WalkingPair.left }
               have h_comp_id := CategoryTheory.Category.id_comp hom
               cases hom
@@ -141,7 +146,6 @@ instance instHasBinaryProductsXZar.{u} {C : Type u} {Cat : XZarCat.{u}} :
               simp_all
             | { as := .right }, { as := .right } => by
               simp
-              funext
               have h_id := CategoryTheory.Discrete.id_def { as := WalkingPair.right }
               have h_comp_id := CategoryTheory.Category.id_comp hom
               cases hom
@@ -159,43 +163,44 @@ instance instHasBinaryProductsXZar.{u} {C : Type u} {Cat : XZarCat.{u}} :
     exact HasLimit.mk {
       cone := cone
       isLimit := {
-        lift := fun cone' => by
-          let hom : Hom cone'.pt cone.pt := fun cone_pt => by
-            have h : Subtype (@Obj.x C Cat cone.pt) := by
-              -- Both cones have projections
-              -- and we have a map from the projections to an actual Prod
-              -- which gives X ∩ Y
-              let { val, property } := cone_pt
-              let { val := val_left, property := p_left } :=
-                cone'.π.app { as := .left } (by assumption)
-              let { val := val_right, property := p_right } :=
-                cone'.π.app { as := .right } (by assumption)
+        lift := fun cone' => ⟨⟨fun cone_pt h_subst => by
+            -- Both cones have projections
+            -- and we have a map from the projections to an actual Prod
+            -- which gives X ∩ Y
+            let hom_x : cone'.pt ⟶ left := cone'.π.app { as := .left }
+            let hom_y : cone'.pt ⟶ right := cone'.π.app { as := .right }
 
-              unfold Obj.x at property
-              unfold Obj.x at p_left
-              unfold Obj.x at p_right
+            let hom_x' := prod.π₁
+            let hom_y' := prod.π₂
 
-              -- Since cone'.pt : Obj and val ∈ cone'.pt,
-              -- we can form cone'.pt ⟶ obj left and cone'.pt ⟶ obj right
-              -- Then we can make a Product
-              -- Since we already have the first Product
-              -- we can connect the two in a diamond shape.
-              -- However, we do not have the crucial property that x ∈ X ∩ Y
+            unfold Hom at hom_x'
+            unfold Hom at hom_y'
+            unfold Obj.x at hom_x'
+            unfold Obj.x at hom_y'
 
-              let hom_x₀ : Hom cone'.pt left := fun e => { val := val_left, property := p_left }
-              let hom_y₀ : Hom cone'.pt right := fun e => { val := val_right, property := p_right }
+            match hom_x, hom_y with
+            | .up (.up hom_x), .up (.up hom_y) =>
+              have h : cone'.pt.1 ⊆ (left.1 ∩ right.1) := by
+                simp
+                exact ⟨by assumption, by assumption⟩
 
-              have h : val ∈ (left.x ∩ right.x) := by
-                constructor
-                
-                sorry
+              have hom_x : cone'.pt.1 ⊆ left.1 := by assumption
+              have hom_y : cone'.pt.1 ⊆ right.1 := by assumption
 
-              -- We can form the diamond shape now, since we have cone'.pt ⟶ left, cone'.pt ⟶ right
-              -- and cone.pt ⟶ left and cone.pt ⟶ right
-              
-              sorry
-            exact h
-          exact hom
+              rw [Prod.p_hom_def_eq]
+
+              constructor
+              case left =>
+                apply Set.mem_of_mem_of_subset
+                case hx =>
+                  assumption
+                exact hom_x
+              case right =>
+                apply Set.mem_of_mem_of_subset
+                case hx =>
+                  assumption
+                exact hom_y
+         ⟩⟩
       }
     }
 
