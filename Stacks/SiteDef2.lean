@@ -57,10 +57,10 @@ class Obj.{v} {C : Type v} [TopologicalSpace C] where
   x : Set C
   h_open : IsOpen x
 
-def Hom.{u} {C : Type u} [TopologicalSpace C] (X Y : @Obj C _) := X.x → Y.x
+def Hom.{u} {C : Type u} [TopologicalSpace C] (X Y : @Obj C _) := X.x ⊆ Y.x → Sort u
 
 instance Hom.instQuiver.{u} {C : Type u} [TopologicalSpace C] : Quiver.{u + 1} (@Obj.{u} C _) where
-  Hom X Y := Hom X Y
+  Hom X Y := Hom.{u} X Y
 
 abbrev XZarCat.{u} {C : Type u} := TopologicalSpace.{u} C
 
@@ -165,38 +165,34 @@ instance instHasBinaryProductsXZar.{u} {C : Type u} {Cat : XZarCat.{u}} :
               -- and we have a map from the projections to an actual Prod
               -- which gives X ∩ Y
               let { val, property } := cone_pt
-              let { val := val_left, property := p_left } := cone'.π.app { as := .left } (by assumption)
-              let { val := val_right, property := p_right } := cone'.π.app { as := .right } (by assumption)
+              let { val := val_left, property := p_left } :=
+                cone'.π.app { as := .left } (by assumption)
+              let { val := val_right, property := p_right } :=
+                cone'.π.app { as := .right } (by assumption)
 
-              let pt := cone_pt
-              let pt_x := cone'.π.app { as := .left } (by assumption)
-              let pt_y := cone'.π.app { as := .left } (by assumption)
+              unfold Obj.x at property
+              unfold Obj.x at p_left
+              unfold Obj.x at p_right
 
-              let prod' := Prod.mk' (obj { as := .left }) (obj { as := .right })
+              -- Since cone'.pt : Obj and val ∈ cone'.pt,
+              -- we can form cone'.pt ⟶ obj left and cone'.pt ⟶ obj right
+              -- Then we can make a Product
+              -- Since we already have the first Product
+              -- we can connect the two in a diamond shape.
+              -- However, we do not have the crucial property that x ∈ X ∩ Y
 
-              let hom_x := prod'.π₁
-              let hom_y := prod'.π₂
+              let hom_x₀ : Hom cone'.pt left := fun e => { val := val_left, property := p_left }
+              let hom_y₀ : Hom cone'.pt right := fun e => { val := val_right, property := p_right }
 
-              rw [Hom] at hom_x
-              rw [Hom] at hom_y
-              have h := hom_x { val := pt_x, property :=
-                (by
-                  
-                  sorry)
-              }
-              
-              -- There is an inclusion map from the Prod to its projections
-              -- therefore, we can get val ∈ X ∩ Y
-              -- by getting the projections,
-              -- then using the hom property to get the members in each sets
-              let stuff : prod.P.x := by
-                rw [Prod.p_hom_def_eq]
-                constructor
+              have h : val ∈ (left.x ∩ right.x) := by
                 constructor
                 
                 sorry
+
+              -- We can form the diamond shape now, since we have cone'.pt ⟶ left, cone'.pt ⟶ right
+              -- and cone.pt ⟶ left and cone.pt ⟶ right
               
-              exact { val := val, property := by constructor; exact p_left; sorry }
+              sorry
             exact h
           exact hom
       }
