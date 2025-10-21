@@ -7,9 +7,9 @@ open CategoryTheory
 open CategoryTheory.Limits
 
 -- A family or morphisms with destination dst.
-abbrev Precover {C : Type} [Category C] (X : C) := Set (Over X)
+abbrev Precover.{u} {C : Type u} [Category.{u, u} C] (X : C) := Set (Over X)
 
-structure Site (C : Type) [Category C] [HasPullbacks C] where
+structure Site.{u} (C : Type u) [Category.{u, u} C] [HasPullbacks.{u, u} C] where
   coverings (X : C) : Set (Precover X)
   iso {X Y : C} (f : Y ⟶ X) : IsIso f → { Over.mk f } ∈ coverings X
   trans {X : C} (U : Precover X) (hU : U ∈ coverings X)
