@@ -246,19 +246,65 @@ instance instHasPullbacksXZar.{u} {C : Type u} {Cat : XZarCat.{u}} : @HasPullbac
     }
 
 instance instSiteXZar.{u} {C : Type u} {Cat : XZarCat.{u}} : @Site Obj (instCategoryXZar.{u} Cat) (@instHasPullbacksXZar.{u} C Cat) where
-  coverings := fun X (precov : Set (Over X)) => ∀ (hom : Over X), hom ∈ precov → hom.left = X
+  coverings := fun X (precov : Set (Over X)) => ∀ (over : Over X), over ∈ precov ↔ over.left = X
   iso {X Y} hom h_is_iso := by
     match h_is_iso, hom with
     | ⟨inv, ⟨inv_left, inv_right⟩⟩, .up (.up h_in) =>
       have h_subst : X.x ⊆ Y.x := inv.down.down
       have h_subst_hom : Hom X Y := h_subst
       have h_eq : X.x = Y.x := subset_antisymm (by assumption) (by assumption)
-      change (fun precov ↦ ∀ (hom : Over X), hom ∈ precov → hom.left = X) {Over.mk _}
+      change (fun precov ↦ ∀ (over : Over X), over ∈ precov ↔ over.left = X) {Over.mk _}
       simp
+      intro ov
+      constructor
+      intro h
+      unfold Obj.x at *
       ext
+      unfold Obj.x
       rw [h_eq]
-  trans {X} precov h_precov V ov h_ov_precov := by
-    
+      simp_all
+      intro h_eq'
+      cases ov
+      unfold Obj.x at *
+      have h : X = Y := by
+        ext
+        unfold Obj.x
+        rw [h_eq]
+      simp_all
+      rw [h] at h_in
+      simp [Over.mk]
+      simp [CostructuredArrow.mk]
+      subst h_eq' h
+      simp_all only
+      rfl
+  trans {X} precov h_precov V ov := by
+    let { left := Y, right, hom } := ov
+
+    simp at hom
+    let prod := Prod.mk' Y X
+
+    have h_precov' : ∀ (over : Over X), over ∈ precov ↔ over.left = X := h_precov
+
+    have π₁ := prod.π₁
+    have π₂ := prod.π₂
+
+    let π_pullback := instHasPullbacksXZar.has_limit
+
+    -- Since we have pullbacks, then we have a morphism from Y and X to P
+    -- since P.pt = X ∩ Y, and since we also have products with projections (X ∩ Y),
+    -- π₁ : X × Y ⟶ X,
+    -- then X ⟶ P.pt ⟶ Y
+    -- and Y ⟶ P.pt ⟶ X
+    -- Since ⟶ = ⊆,
+    -- then X = Y
+
+    simp
+    constructor
+    intro h_ov
+
+    obtain ⟨f, ⟨h_f_precov, ⟨g, ⟨h_g, h_comp_eq⟩⟩⟩⟩ := h_ov
+
+
     sorry
 
 end XZar
