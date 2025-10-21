@@ -12,43 +12,7 @@ open CategoryTheory (Precoverage)
 open CategoryTheory.Limits
 
 /-
-A definition of a site that attempts to use as much from mathlib as possible.
-I also attempt to use encodings more native to type theory.
-I think this definition is quite concise, but let me know if anything is wrong.
--/
-
-inductive Site.Covering.{u} {C : Type u}
-  [Category.{u} C] [HasBinaryProducts.{u} C] :
-  C → C → Prop
-  -- Axiom 1
-  | iso   (X Y      : C) : Iso X Y → Site.Covering X Y
-  -- Axiom 2
-  | trans (X Y Z    : C) : Site.Covering X Y
-    → Site.Covering Y Z
-    → Site.Covering X Z
-  -- Axiom 3
-  | prod (X Y Z XZ  : C) : Site.Covering Y Z
-    → Nonempty (X ⟶ Z)
-    → HasBinaryProduct Y XZ
-    → Site.Covering (prod Y XZ) X
-
-class Site.{u} {C : Type u}
-  [Category.{u} C] [HasBinaryProducts.{u} C]
-  (Z : C) where
-  coverings (X : C) : (X ⟶ Z) → Site.Covering X Z
-
-/-
-Example 3 from Stacks project page (https://stacks.math.columbia.edu/tag/00VG):
--/
-
-lemma canonical_functor.{u} {C : Type u} [Category.{u} C] [HasBinaryProducts.{u} C]
-  (X : C) : (∀ (Y : C) (hom : Y ⟶ X), IsIso hom) → @Site.{u} C _ _ X := fun h_isos => {
-    coverings Y := fun hom =>
-      Site.Covering.iso _ _ (@asIso _ _ _ _  hom (h_isos Y hom))
-  }
-
-/-
-Example 1 from Stacks project page.
+Example 1 from Stacks project Site page.
 -/
 
 namespace XZar
@@ -204,9 +168,4 @@ instance instHasBinaryProductsXZar.{u} {C : Type u} {Cat : XZarCat.{u}} :
       }
     }
 
-instance instSiteXZar.{u} {C : Type u} : @Site.{u} (@Obj C) instCategoryXZar _ { x := Set.univ } where
-  sorry
-
 end XZar
-
-lemma top_xzar_site.{v, u} {X : Type u} [TopologicalSpace X] : 
