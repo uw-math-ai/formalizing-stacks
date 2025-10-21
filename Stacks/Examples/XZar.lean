@@ -17,6 +17,7 @@ Example 1 from Stacks project Site page.
 
 namespace XZar
 
+@[ext]
 class Obj.{v} {C : Type v} [TopologicalSpace C] where
   x : Set C
   h_open : IsOpen x
@@ -167,5 +168,98 @@ instance instHasBinaryProductsXZar.{u} {C : Type u} {Cat : XZarCat.{u}} :
          ⟩⟩
       }
     }
+
+instance instHasPullbacksXZar.{u} {C : Type u} {Cat : XZarCat.{u}} : @HasPullbacks.{u, u} (@Obj.{u} C Cat) _ where
+  has_limit := fun F@{ obj, map, map_id, map_comp } =>
+    -- Left and right objects with morphisms to some central object
+    let hom_left : (obj .left) ⟶ (obj .one)   := map WalkingCospan.Hom.inl
+    let hom_right : (obj .right) ⟶ (obj .one) := map WalkingCospan.Hom.inr
+
+    -- We also have a binary product containing left and right
+    let prod := Prod.mk' (obj .left) (obj .right)
+
+    -- Since we have Binary Products, we also have a Functor from WalkingPair to
+    -- Obj and projections from left to right
+    let F₂@{ obj := obj_prod, map := map_prod, map_id := map_id_prod, map_comp := map_comp_prod }
+      : CategoryTheory.Functor (Discrete WalkingPair) Obj := {
+      obj := fun pair => match pair with
+        | .mk (.left) => obj .left
+        | .mk (.right) => obj .right
+      map {X Y} hom :=
+        match X, Y with
+        | .mk .left, .mk .left   => (instCategoryXZar Cat).id <| obj .left
+        | .mk .right, .mk .right => (instCategoryXZar Cat).id <| obj .right
+    }
+
+    -- So we can compose projections from Prod to left and right, then to the span
+    -- Making a diamond shape
+
+    let π₁_lift : prod.P ⟶ (obj .left) := ⟨⟨prod.π₁⟩⟩
+    let π₂_lift : prod.P ⟶ (obj .right) := ⟨⟨prod.π₂⟩⟩
+
+    let π₁_span : Hom prod.P (obj .one) := (π₁_lift ≫ hom_left).down.down
+    let π₂_span : Hom prod.P (obj .one) := (π₂_lift ≫ hom_right).down.down
+
+    HasLimit.mk {
+      cone := {
+        pt := prod.P,
+        π := {
+          app span := match span with
+            | .left => ⟨⟨prod.π₁⟩⟩
+            | .right => ⟨⟨prod.π₂⟩⟩
+            | .one => ⟨⟨π₁_span⟩⟩
+        }
+      }
+      isLimit := {
+        lift := fun { pt, π } => ⟨⟨fun cone_pt h_subst => by
+          have hom_x := (π.app .left).down.down
+          have hom_y := (π.app .right).down.down
+
+          simp at hom_x
+          simp at hom_y
+
+          have subset_hom_x : pt.x ⊆ (obj .left).x  := hom_x
+          have subset_hom_y : pt.x ⊆ (obj .right).x := hom_y
+
+          unfold Obj.x
+          simp
+          apply Set.mem_of_mem_of_subset
+          case hx =>
+            exact h_subst
+          unfold Obj.x
+          simp
+          apply Set.Subset.trans
+          case h.ab =>
+            apply Set.subset_inter
+            case rs =>
+              exact hom_x
+            case rt =>
+              exact hom_y
+          conv =>
+          right
+          change (obj .left).x ∩ (obj .right).x
+          rfl
+        ⟩⟩
+      }
+    }
+
+instance instSiteXZar.{u} {C : Type u} {Cat : XZarCat.{u}} : @Site Obj (instCategoryXZar Cat) (@instHasPullbacksXZar C Cat) where
+  coverings := fun X (precov : Set (Over X)) => ∀ (hom : Over X), hom.left = X
+  iso {X Y} hom h_is_iso := by
+    match h_is_iso, hom with
+    | ⟨inv, ⟨inv_left, inv_right⟩⟩, .up (.up h_in) =>
+      have h_subst : X.x ⊆ Y.x := inv.down.down
+      have h_subst_hom : Hom X Y := h_subst
+      have h_eq : X.x = Y.x := subset_antisymm (by assumption) (by assumption)
+      intro precov
+      ext
+      constructor
+      intro h
+      unfold Obj.x
+      unfold Obj.x at h
+      rw [h_eq]
+      exact h
+      
+      sorry
 
 end XZar
