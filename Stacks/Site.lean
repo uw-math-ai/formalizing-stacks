@@ -12,7 +12,8 @@ abbrev Precover {C : Type} [Category C] (X : C) := Set (Over X)
 structure Site (C : Type) [Category C] [HasPullbacks C] where
   coverings (X : C) : Set (Precover X)
   iso {X Y : C} (f : Y ⟶ X) : IsIso f → { Over.mk f } ∈ coverings X
-  trans {X : C} (U : Precover X) (hU : U ∈ coverings X) (V : ∀ f ∈ U, Precover f.left) :
-    { Over.mk (g.hom ≫ f.hom) | (f : Over X) (hf : f ∈ U) (g ∈ V f hf) } ∈ coverings X
-  pullback {X : C} (g : Over X) (U : Precover X) (hU : U ∈ coverings X) :=
-    { Over.mk (pullback.fst g.hom f.hom) | f ∈ U } ∈ coverings g.left
+  trans {X : C} (U : Precover X) (hU : U ∈ coverings X)
+        (V : ∀ f ∈ U, { cover // cover ∈ coverings f.left }) :
+    { Over.mk (g.hom ≫ f.hom) | (f : Over X) (hf : f ∈ U) (g ∈ (V f hf).val) } ∈ coverings X
+  pullback {X : C} (f : Over X) (U : Precover X) (hU : U ∈ coverings X) :=
+    { Over.mk (pullback.snd g.hom f.hom) | g ∈ U } ∈ coverings f.left
