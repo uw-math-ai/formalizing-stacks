@@ -3,7 +3,9 @@ import Mathlib.CategoryTheory.Iso
 import Mathlib.CategoryTheory.Limits.Shapes.BinaryProducts
 import Mathlib.CategoryTheory.Sites.Precoverage
 import Mathlib.Topology.Defs.Basic
+import Stacks.Site
 
+open CategoryTheory
 open CategoryTheory (Category)
 open CategoryTheory (asIso)
 open CategoryTheory (Iso)
@@ -243,23 +245,20 @@ instance instHasPullbacksXZar.{u} {C : Type u} {Cat : XZarCat.{u}} : @HasPullbac
       }
     }
 
-instance instSiteXZar.{u} {C : Type u} {Cat : XZarCat.{u}} : @Site Obj (instCategoryXZar Cat) (@instHasPullbacksXZar C Cat) where
-  coverings := fun X (precov : Set (Over X)) => ∀ (hom : Over X), hom.left = X
+instance instSiteXZar.{u} {C : Type u} {Cat : XZarCat.{u}} : @Site Obj (instCategoryXZar.{u} Cat) (@instHasPullbacksXZar.{u} C Cat) where
+  coverings := fun X (precov : Set (Over X)) => ∀ (hom : Over X), hom ∈ precov → hom.left = X
   iso {X Y} hom h_is_iso := by
     match h_is_iso, hom with
     | ⟨inv, ⟨inv_left, inv_right⟩⟩, .up (.up h_in) =>
       have h_subst : X.x ⊆ Y.x := inv.down.down
       have h_subst_hom : Hom X Y := h_subst
       have h_eq : X.x = Y.x := subset_antisymm (by assumption) (by assumption)
-      intro precov
+      change (fun precov ↦ ∀ (hom : Over X), hom ∈ precov → hom.left = X) {Over.mk _}
+      simp
       ext
-      constructor
-      intro h
-      unfold Obj.x
-      unfold Obj.x at h
       rw [h_eq]
-      exact h
-      
-      sorry
+  trans {X} precov h_precov V ov h_ov_precov := by
+    
+    sorry
 
 end XZar
