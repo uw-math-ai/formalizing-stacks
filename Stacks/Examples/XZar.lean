@@ -3,6 +3,7 @@ import Mathlib.CategoryTheory.Iso
 import Mathlib.CategoryTheory.Limits.Shapes.BinaryProducts
 import Mathlib.CategoryTheory.Sites.Precoverage
 import Mathlib.Topology.Defs.Basic
+import Mathlib.Tactic.ApplyFun
 import Stacks.Site
 
 open CategoryTheory
@@ -246,7 +247,7 @@ instance instHasPullbacksXZar.{u} {C : Type u} {Cat : XZarCat.{u}} : @HasPullbac
     }
 
 instance instSiteXZar.{u} {C : Type u} {Cat : XZarCat.{u}} : @Site Obj (instCategoryXZar.{u} Cat) (@instHasPullbacksXZar.{u} C Cat) where
-  coverings := fun X => { cover | (⋃ (f : Over X), { left | left = f.left ∧ f ∈ cover }) = ({X} : Set Obj) }
+  coverings := fun X => { cover | (⋃ f ∈ cover, { left | left = f.left }) = ({X} : Set Obj) }
   iso {X Y} hom h_is_iso := by
     match h_is_iso, hom with
     | ⟨inv, ⟨inv_left, inv_right⟩⟩, .up (.up h_in) =>
@@ -256,62 +257,25 @@ instance instSiteXZar.{u} {C : Type u} {Cat : XZarCat.{u}} : @Site Obj (instCate
       simp
       ext
       simp_all
-      have h_y_x_set_eq : Y.x = X.x := Set.Subset.antisymm hom.down.down inv.down.down
-      have h_y_x_eq : Y = X := by
-        ext
-        rw [h_y_x_set_eq]
-      constructor
-      rw [h_y_x_eq]
-      exact id
-      rw [← h_y_x_eq]
-      exact id
-  trans {X} precov h_precov V ov := by
-    let { left := Y, right, hom } := ov
-
-    let hom : Hom Y X := by
-      simp at hom
-      exact hom.down.down
-
-    let prod := Prod.mk' X Y
-
-    have h_precov' : ∀ (over : Over X), over ∈ precov ↔ over.left = X := h_precov
-
-    have π₁ : Hom prod.P X := prod.π₁
-    have π₂ : Hom prod.P Y := prod.π₂
-
-    simp
+  trans {X} precov h_precov h_in_cov := by
+    ext
+    let h_precov₀ := h_precov
     constructor
-    intro h_ov
-
-    obtain ⟨f, ⟨h_f_precov, ⟨g, ⟨h_g, h_comp_eq⟩⟩⟩⟩ := h_ov
-
-    have h := (h_precov' f).mp h_f_precov
-
-    let { left := left_f, right := right_f, hom := hom_f } := f
-    simp at hom_f
-
-    let { left := left_g, right := right_g, hom := hom_g } := g
-    simp at hom_g
-
-    let { val, property } := V { left := left_f, right := right_f, hom := hom_f } (by simp_all)
-
+    simp
+    intro
+      ov_x
+      ov_y
+      h_y_ov_precov
+      h_ov_x_in_covering
+      h_ov_x_covering'
+      h_over_comp_eq
+      h_ov_x_left_eq
+    rw [← h_over_comp_eq] at h_ov_x_left_eq
+    rw [h_ov_x_left_eq]
+    simp
+    let f@{ val, property } := h_in_cov ov_y h_y_ov_precov
     simp_all
-
-    let property : ∀ (over : Over left_f), over ∈ val ↔ over.left = X:= property
-
-    have h₁ := (property g).mp (by simp_all; n sorry)
-    have h₂ := property (by rw [h]; exact f)
-
     
-    
-    rw [h] at hom_f
-    rw [h] at hom_g
-
-    simp at h_comp_eq
-
-    cases h_comp_eq
-    simp_all
-    sorry
     sorry
 
 end XZar
