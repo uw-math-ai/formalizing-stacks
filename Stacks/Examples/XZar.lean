@@ -246,37 +246,25 @@ instance instHasPullbacksXZar.{u} {C : Type u} {Cat : XZarCat.{u}} : @HasPullbac
     }
 
 instance instSiteXZar.{u} {C : Type u} {Cat : XZarCat.{u}} : @Site Obj (instCategoryXZar.{u} Cat) (@instHasPullbacksXZar.{u} C Cat) where
-  coverings := fun X (precov : Set (Over X)) => ∀ (over : Over X), over ∈ precov ↔ over.left = X
+  coverings := fun X => { cover | (⋃ (f : Over X), { left | left = f.left ∧ f ∈ cover }) = ({X} : Set Obj) }
   iso {X Y} hom h_is_iso := by
     match h_is_iso, hom with
     | ⟨inv, ⟨inv_left, inv_right⟩⟩, .up (.up h_in) =>
       have h_subst : X.x ⊆ Y.x := inv.down.down
       have h_subst_hom : Hom X Y := h_subst
       have h_eq : X.x = Y.x := subset_antisymm (by assumption) (by assumption)
-      change (fun precov ↦ ∀ (over : Over X), over ∈ precov ↔ over.left = X) {Over.mk _}
       simp
-      intro ov
-      constructor
-      intro h
-      unfold Obj.x at *
       ext
-      unfold Obj.x
-      rw [h_eq]
       simp_all
-      intro h_eq'
-      cases ov
-      unfold Obj.x at *
-      have h : X = Y := by
+      have h_y_x_set_eq : Y.x = X.x := Set.Subset.antisymm hom.down.down inv.down.down
+      have h_y_x_eq : Y = X := by
         ext
-        unfold Obj.x
-        rw [h_eq]
-      simp_all
-      rw [h] at h_in
-      simp [Over.mk]
-      simp [CostructuredArrow.mk]
-      subst h_eq' h
-      simp_all only
-      rfl
+        rw [h_y_x_set_eq]
+      constructor
+      rw [h_y_x_eq]
+      exact id
+      rw [← h_y_x_eq]
+      exact id
   trans {X} precov h_precov V ov := by
     let { left := Y, right, hom } := ov
 
