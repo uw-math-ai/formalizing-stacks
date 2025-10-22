@@ -280,23 +280,16 @@ instance instSiteXZar.{u} {C : Type u} {Cat : XZarCat.{u}} : @Site Obj (instCate
   trans {X} precov h_precov V ov := by
     let { left := Y, right, hom } := ov
 
-    simp at hom
-    let prod := Prod.mk' Y X
+    let hom : Hom Y X := by
+      simp at hom
+      exact hom.down.down
+
+    let prod := Prod.mk' X Y
 
     have h_precov' : ∀ (over : Over X), over ∈ precov ↔ over.left = X := h_precov
 
-    have π₁ := prod.π₁
-    have π₂ := prod.π₂
-
-    let π_pullback := instHasPullbacksXZar.has_limit
-
-    -- Since we have pullbacks, then we have a morphism from Y and X to P
-    -- since P.pt = X ∩ Y, and since we also have products with projections (X ∩ Y),
-    -- π₁ : X × Y ⟶ X,
-    -- then X ⟶ P.pt ⟶ Y
-    -- and Y ⟶ P.pt ⟶ X
-    -- Since ⟶ = ⊆,
-    -- then X = Y
+    have π₁ : Hom prod.P X := prod.π₁
+    have π₂ : Hom prod.P Y := prod.π₂
 
     simp
     constructor
@@ -304,7 +297,33 @@ instance instSiteXZar.{u} {C : Type u} {Cat : XZarCat.{u}} : @Site Obj (instCate
 
     obtain ⟨f, ⟨h_f_precov, ⟨g, ⟨h_g, h_comp_eq⟩⟩⟩⟩ := h_ov
 
+    have h := (h_precov' f).mp h_f_precov
 
+    let { left := left_f, right := right_f, hom := hom_f } := f
+    simp at hom_f
+
+    let { left := left_g, right := right_g, hom := hom_g } := g
+    simp at hom_g
+
+    let { val, property } := V { left := left_f, right := right_f, hom := hom_f } (by simp_all)
+
+    simp_all
+
+    let property : ∀ (over : Over left_f), over ∈ val ↔ over.left = X:= property
+
+    have h₁ := (property g).mp (by simp_all; n sorry)
+    have h₂ := property (by rw [h]; exact f)
+
+    
+    
+    rw [h] at hom_f
+    rw [h] at hom_g
+
+    simp at h_comp_eq
+
+    cases h_comp_eq
+    simp_all
+    sorry
     sorry
 
 end XZar
