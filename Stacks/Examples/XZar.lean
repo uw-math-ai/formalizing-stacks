@@ -279,19 +279,31 @@ instance instSiteXZar.{u} {C : Type u} {Cat : XZarCat.{u}} : @Site Obj (instCate
     rw [h_ov_x_left_eq] at *
     simp_all
     rw [← ov_comp]
-    let { val := precov_containing_ov_mid, property } := (h_in_cov ov_y h_y_ov_precov)
-    let property : {cover | ⋃ ov ∈ cover, {left | left = ov.left} = {ov_y.left}} precov_containing_ov_mid := property
+    let precov_containing_ov_mid := (h_in_cov ov_y h_y_ov_precov).val
+    let property                 := (h_in_cov ov_y h_y_ov_precov).property
+    let property : ⋃ ov ∈ precov_containing_ov_mid, {left | left = ov.left} = {ov_y.left} := property
     simp at property
-    let h_all_coverings : ⋃ ov ∈ precov_containing_ov_mid, {ov.left} = {ov_y.left} := by simp_all
+    let h_all_coverings : ⋃ ov ∈ precov_containing_ov_mid, {ov.left} = {ov_y.left} := by
+      simp_all
     let h_all_coverings_precov : ⋃ ov ∈ precov, {left | left = ov.left} = {X} := h_precov₀
-    let h_ov_mid_mem : ov_mid ∈ (h_in_cov ov_y h_y_ov_precov).val := h_ov_mid_precover
+    let h_ov_mid_mem : ov_mid ∈ precov_containing_ov_mid := h_ov_mid_precover
+    apply_fun ({ b : Obj | b = .})
+    change {(Over.mk (ov_mid.hom ≫ ov_y.hom)).left} = {X}
+    rw [← h_all_coverings_precov]
     rw [Over.mk]
     simp
-    let h_in_precov_ov_mid : ov_mid ∈ precov_containing_ov_mid := by
-      apply Set.mem_of_mem_of_subset
-      assumption
-      intro a h
-      change precov_containing_ov_mid a
+    let h_ov_mid_mem' : ((h_in_cov ov_y h_y_ov_precov).val) ov_mid := h_ov_mid_precover
+    let property' : ⋃ ov ∈ ((h_in_cov ov_y h_y_ov_precov).val), {ov.left} = {ov_y.left} := property
+    let precov_containing_ov_mid : Precover ov_y.left := (h_in_cov ov_y h_y_ov_precov).val
+    let property_mid : ⋃ ov ∈ precov_containing_ov_mid, {ov.left} = {ov_y.left} := property
+    have h_mem_ov_mid : ov_mid ∈ {ov | ⋃ ov ∈ precov_containing_ov_mid, {left | left = ov.left} = {ov_y.left}} := by
+      simp_all
+    have h_mem_ov_mid : ov_mid ∈ {ov | ⋃ ov ∈ precov_containing_ov_mid, {left | left = ov.left} = {ov_y.left}} := by
+      simp_all
+    let h : ({ov_mid.left} : Set Obj) = ({ov_y.left} : Set Obj):= by
+      
+      sorry
+    let h_in_precov_ov_mid : ov_mid.left = ov_y.left := by
       
       sorry
     
