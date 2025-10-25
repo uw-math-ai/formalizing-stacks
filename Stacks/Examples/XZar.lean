@@ -282,25 +282,21 @@ instance instSiteXZar.{u} {C : Type u} {Cat : XZarCat.{u}} : @Site Obj (instCate
       let precov_containing_ov_mid : Precover ov_y.left := (h_in_cov ov_y h_y_ov_precov).val
       let property : ⋃ ov ∈ precov_containing_ov_mid, {ov.left} = {ov_y.left} :=
         (h_in_cov ov_y h_y_ov_precov).property
-      apply_fun ({ b : Obj | b = .})
-      change {(Over.mk (ov_mid.hom ≫ ov_y.hom)).left} = {X}
-      dsimp
-      rw [← h_precov₀]
-      change {ov_mid.left} = ⋃ ov ∈ precov, {ov.left}
-      simp at h_precov₀
-      rw [h_precov₀]
-      simp
-      have h : ov_mid.left ∈ ⋃ ov ∈ precov_containing_ov_mid, {ov.left} := by
+      apply_fun ({ b : Obj | b = ·})
+      case _ =>
         simp
-        use ov_mid
-      rw [property] at h
-      rw [h]
-      have h_left : ov_y.left ∈ (⋃ ov ∈ precov, {ov.left}) := by
-        simp
-        use ov_y
-      rw [h_precov₀] at h_left
-      exact h_left
-      simp [Function.Injective]
+        have h : ov_mid.left ∈ ({ov_y.left} : Set Obj) := by
+          rw [← property]
+          simp
+          use ov_mid
+        have h_left : ov_y.left ∈ ({X}: Set Obj) := by
+          rw [← h_precov₀]
+          simp
+          use ov_y
+        rw [h]
+        exact h_left
+      case inj =>
+        simp [Function.Injective]
     case h.mpr Y =>
       intro h_hom_Y_X
       have h_Y_X_def_eq : Y = X := Set.eq_of_mem_singleton h_hom_Y_X
