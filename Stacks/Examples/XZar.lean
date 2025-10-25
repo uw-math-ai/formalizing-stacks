@@ -247,7 +247,7 @@ instance instHasPullbacksXZar.{u} {C : Type u} {Cat : XZarCat.{u}} : @HasPullbac
     }
 
 instance instSiteXZar.{u} {C : Type u} {Cat : XZarCat.{u}} : @Site Obj (instCategoryXZar.{u} Cat) (@instHasPullbacksXZar.{u} C Cat) where
-  coverings := fun X => { cover | (⋃ f ∈ cover, { left | left = f.left }) = ({X} : Set Obj) }
+  coverings := fun X => { cover | (⋃ ov ∈ cover, { left | left = ov.left }) = ({X} : Set Obj) }
   iso {X Y} hom h_is_iso := by
     match h_is_iso, hom with
     | ⟨inv, ⟨inv_left, inv_right⟩⟩, .up (.up h_in) =>
@@ -258,6 +258,12 @@ instance instSiteXZar.{u} {C : Type u} {Cat : XZarCat.{u}} : @Site Obj (instCate
       ext
       simp_all
   trans {X} precov h_precov h_in_cov := by
+    -- Since the Over's in precov are commutative triangles:
+    -- A ⟶ T
+    -- B ⟶ T
+    -- where T is the domain,
+    -- then T is kind of like a Pullback?
+    -- and we can form A × B
     ext
     let h_precov₀ := h_precov
     constructor
@@ -266,15 +272,28 @@ instance instSiteXZar.{u} {C : Type u} {Cat : XZarCat.{u}} : @Site Obj (instCate
       ov_x
       ov_y
       h_y_ov_precov
-      h_ov_x_in_covering
-      h_ov_x_covering'
-      h_over_comp_eq
+      ov_mid
+      h_ov_mid_precover
+      ov_comp
       h_ov_x_left_eq
-    rw [← h_over_comp_eq] at h_ov_x_left_eq
-    rw [h_ov_x_left_eq]
-    simp
-    let f@{ val, property } := h_in_cov ov_y h_y_ov_precov
+    rw [h_ov_x_left_eq] at *
     simp_all
+    rw [← ov_comp]
+    let { val := precov_containing_ov_mid, property } := (h_in_cov ov_y h_y_ov_precov)
+    let property : {cover | ⋃ ov ∈ cover, {left | left = ov.left} = {ov_y.left}} precov_containing_ov_mid := property
+    simp at property
+    let h_all_coverings : ⋃ ov ∈ precov_containing_ov_mid, {ov.left} = {ov_y.left} := by simp_all
+    let h_all_coverings_precov : ⋃ ov ∈ precov, {left | left = ov.left} = {X} := h_precov₀
+    let h_ov_mid_mem : ov_mid ∈ (h_in_cov ov_y h_y_ov_precov).val := h_ov_mid_precover
+    rw [Over.mk]
+    simp
+    let h_in_precov_ov_mid : ov_mid ∈ precov_containing_ov_mid := by
+      apply Set.mem_of_mem_of_subset
+      assumption
+      intro a h
+      change precov_containing_ov_mid a
+      
+      sorry
     
     sorry
 
