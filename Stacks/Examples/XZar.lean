@@ -298,14 +298,16 @@ instance instSiteXZar.{u} {C : Type u} {Cat : XZarCat.{u}} : @Site Obj (instCate
     let property_mid : ⋃ ov ∈ precov_containing_ov_mid, {ov.left} = {ov_y.left} := property
     have h_mem_ov_mid : ov_mid ∈ {ov | ⋃ ov ∈ precov_containing_ov_mid, {left | left = ov.left} = {ov_y.left}} := by
       simp_all
-    have h_mem_ov_mid : ov_mid ∈ {ov | ⋃ ov ∈ precov_containing_ov_mid, {left | left = ov.left} = {ov_y.left}} := by
+    simp only [Set.setOf_eq_eq_singleton] at h_mem_ov_mid
+    simp at h_precov₀
+    have h_precov_nonempty : ∃ (x : Over ov_y.left), x ∈ precov_containing_ov_mid := by
+      use ov_mid
+    rw [h_precov₀]
+    simp [Set.setOf_eq_eq_singleton]
+    have h_ov_comp_left : (Over.mk (ov_mid.hom ≫ ov_y.hom)).left = ov_mid.left := by
       simp_all
-    let h : ({ov_mid.left} : Set Obj) = ({ov_y.left} : Set Obj):= by
-      
-      sorry
-    let h_in_precov_ov_mid : ov_mid.left = ov_y.left := by
-      
-      sorry
+      subst ov_comp
+      simp_all only [Set.setOf_eq_eq_singleton, Set.mem_setOf_eq, Over.mk_left, precov_containing_ov_mid]
     
     sorry
 
