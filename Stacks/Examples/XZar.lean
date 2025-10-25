@@ -246,72 +246,75 @@ instance instHasPullbacksXZar.{u} {C : Type u} {Cat : XZarCat.{u}} : @HasPullbac
       }
     }
 
-instance instSiteXZar.{u} {C : Type u} {Cat : XZarCat.{u}} : @Site Obj (instCategoryXZar.{u} Cat) (@instHasPullbacksXZar.{u} C Cat) where
-  coverings := fun X => { cover | (⋃ ov ∈ cover, { left | left = ov.left }) = ({X} : Set Obj) }
-  iso {X Y} hom h_is_iso := by
-    match h_is_iso, hom with
-    | ⟨inv, ⟨inv_left, inv_right⟩⟩, .up (.up h_in) =>
-      have h_subst : X.x ⊆ Y.x := inv.down.down
-      have h_subst_hom : Hom X Y := h_subst
-      have h_eq : X.x = Y.x := subset_antisymm (by assumption) (by assumption)
-      simp
-      ext
-      simp_all
-  trans {X} precov h_precov h_in_cov := by
-    -- Since the Over's in precov are commutative triangles:
-    -- A ⟶ T
-    -- B ⟶ T
-    -- where T is the domain,
-    -- then T is kind of like a Pullback?
-    -- and we can form A × B
-    ext
-    constructor
-    case h.mp =>
-      simp
-      intro
-        ov_x
-        ov_y
-        h_y_ov_precov
-        ov_mid
-        h_ov_mid_precover
-        ov_comp
-        h_ov_x_left_eq
-      rw [h_ov_x_left_eq]
-      rw [← ov_comp]
-      let precov_containing_ov_mid : Precover ov_y.left := (h_in_cov ov_y h_y_ov_precov).val
-      let property : ⋃ ov ∈ precov_containing_ov_mid, {ov.left} = {ov_y.left} :=
-        (h_in_cov ov_y h_y_ov_precov).property
-      apply_fun ({ b : Obj | b = ·})
-      case _ =>
+instance instSiteXZar.{u} {C : Type u} {Cat : XZarCat.{u}} : @Site Obj (instCategoryXZar.{u} Cat) (@instHasPullbacksXZar.{u} C Cat) :=
+  let iso {X Y : Obj} (hom : Y ⟶ X) (h_is_iso : IsIso hom) : {Over.mk hom} ∈ {cover | ⋃ ov ∈ cover, {left | left = ov.left} = {X}} := by
+      match h_is_iso, hom with
+      | ⟨inv, ⟨inv_left, inv_right⟩⟩, .up (.up h_in) =>
+        have h_subst : X.x ⊆ Y.x := inv.down.down
+        have h_subst_hom : Hom X Y := h_subst
+        have h_eq : X.x = Y.x := subset_antisymm (by assumption) (by assumption)
         simp
-        have h : ov_mid.left ∈ ({ov_y.left} : Set Obj) := by
-          rw [← property]
+        ext
+        simp_all
+  {
+    coverings := fun X => { cover | (⋃ ov ∈ cover, { left | left = ov.left }) = ({X} : Set Obj) }
+    iso := iso
+    trans {X} precov h_precov h_in_cov := by
+      -- Since the Over's in precov are commutative triangles:
+      -- A ⟶ T
+      -- B ⟶ T
+      -- where T is the domain,
+      -- then T is kind of like a Pullback?
+      -- and we can form A × B
+      ext
+      constructor
+      case h.mp =>
+        simp
+        intro
+          ov_x
+          ov_y
+          h_y_ov_precov
+          ov_mid
+          h_ov_mid_precover
+          ov_comp
+          h_ov_x_left_eq
+        rw [h_ov_x_left_eq]
+        rw [← ov_comp]
+        let precov_containing_ov_mid : Precover ov_y.left := (h_in_cov ov_y h_y_ov_precov).val
+        let property : ⋃ ov ∈ precov_containing_ov_mid, {ov.left} = {ov_y.left} :=
+          (h_in_cov ov_y h_y_ov_precov).property
+        apply_fun ({ b : Obj | b = ·})
+        case _ =>
           simp
-          use ov_mid
-        have h_left : ov_y.left ∈ ({X}: Set Obj) := by
-          rw [← h_precov]
-          simp
-          use ov_y
-        rw [h]
-        exact h_left
-      case inj =>
-        simp [Function.Injective]
-    case h.mpr Y =>
-      intro h_hom_Y_X
-      have h_Y_X_def_eq : Y = X := Set.eq_of_mem_singleton h_hom_Y_X
-      have h_hom_Y_X : Hom Y X := by
-        apply Eq.subset
-        rw [h_Y_X_def_eq]
-      have h_hom_X_Y : Hom X Y := by
-        apply Eq.subset
-        rw [h_Y_X_def_eq]
-      have h_hom_Y_X' : Y ⟶ X := ULift.up (PLift.up h_hom_Y_X)
-      have h_hom_X_Y' : X ⟶ Y := ULift.up (PLift.up h_hom_X_Y)
+          have h : ov_mid.left ∈ ({ov_y.left} : Set Obj) := by
+            rw [← property]
+            simp
+            use ov_mid
+          have h_left : ov_y.left ∈ ({X}: Set Obj) := by
+            rw [← h_precov]
+            simp
+            use ov_y
+          rw [h]
+          exact h_left
+        case inj =>
+          simp [Function.Injective]
+      case h.mpr Y =>
+        intro h_hom_Y_X
+        have h_Y_X_def_eq : Y = X := Set.eq_of_mem_singleton h_hom_Y_X
+        have h_hom_Y_X : Hom Y X := by
+          apply Eq.subset
+          rw [h_Y_X_def_eq]
+        have h_hom_X_Y : Hom X Y := by
+          apply Eq.subset
+          rw [h_Y_X_def_eq]
+        have h_hom_Y_X' : Y ⟶ X := ULift.up (PLift.up h_hom_Y_X)
+        have h_hom_X_Y' : X ⟶ Y := ULift.up (PLift.up h_hom_X_Y)
 
-      -- Since we have an iso, it's in the coverings by axiom 1
-      have h_iso := Iso.mk h_hom_Y_X' h_hom_X_Y'
-      simp_all
-      
-      sorry
+        -- Since we have an iso, it's in the coverings by axiom 1
+        have h_iso := Iso.mk h_hom_Y_X' h_hom_X_Y'
+        have h_is_iso₁ : IsIso h_hom_Y_X' := h_iso
+        have h_is_iso₂ : IsIso h_hom_Y_X' := h_iso
+        sorry
+  }
 
 end XZar
