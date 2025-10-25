@@ -265,7 +265,6 @@ instance instSiteXZar.{u} {C : Type u} {Cat : XZarCat.{u}} : @Site Obj (instCate
     -- then T is kind of like a Pullback?
     -- and we can form A × B
     ext
-    let h_precov₀ := h_precov
     constructor
     case h.mp =>
       simp
@@ -277,7 +276,7 @@ instance instSiteXZar.{u} {C : Type u} {Cat : XZarCat.{u}} : @Site Obj (instCate
         h_ov_mid_precover
         ov_comp
         h_ov_x_left_eq
-      rw [h_ov_x_left_eq] at *
+      rw [h_ov_x_left_eq]
       rw [← ov_comp]
       let precov_containing_ov_mid : Precover ov_y.left := (h_in_cov ov_y h_y_ov_precov).val
       let property : ⋃ ov ∈ precov_containing_ov_mid, {ov.left} = {ov_y.left} :=
@@ -290,7 +289,7 @@ instance instSiteXZar.{u} {C : Type u} {Cat : XZarCat.{u}} : @Site Obj (instCate
           simp
           use ov_mid
         have h_left : ov_y.left ∈ ({X}: Set Obj) := by
-          rw [← h_precov₀]
+          rw [← h_precov]
           simp
           use ov_y
         rw [h]
