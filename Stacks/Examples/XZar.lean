@@ -308,7 +308,19 @@ instance instSiteXZar.{u} {C : Type u} {Cat : XZarCat.{u}} : @Site Obj (instCate
       simp_all
       subst ov_comp
       simp_all only [Set.setOf_eq_eq_singleton, Set.mem_setOf_eq, Over.mk_left, precov_containing_ov_mid]
-    
+    simp at h_mem_ov_mid
+    have h : ov_mid.left ∈ (⋃ ov ∈ precov_containing_ov_mid, {ov.left}) := by
+      simp [h_ov_mid_mem]
+      use ov_mid
+    rw [property] at h
+    simp at h
+    rw [h]
+    have h_left : ov_y.left ∈ (⋃ ov ∈ precov, {ov.left}) := by
+      simp [h_y_ov_precov]
+      use ov_y
+    rw [h_precov₀] at h_left
+    simp at h_left
+    exact h_left
     sorry
 
 end XZar
