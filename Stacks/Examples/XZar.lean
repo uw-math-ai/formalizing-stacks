@@ -289,21 +289,18 @@ instance instSiteXZar.{u} {C : Type u} {Cat : XZarCat.{u}} : @Site Obj (instCate
       change {ov_mid.left} = ⋃ ov ∈ precov, {ov.left}
       simp at h_precov₀
       rw [h_precov₀]
-      simp [Set.setOf_eq_eq_singleton]
-      have h : ov_mid.left ∈ (⋃ ov ∈ precov_containing_ov_mid, {ov.left}) := by
+      simp
+      have h : ov_mid.left ∈ ⋃ ov ∈ precov_containing_ov_mid, {ov.left} := by
         simp
         use ov_mid
       rw [property] at h
-      simp at h
       rw [h]
       have h_left : ov_y.left ∈ (⋃ ov ∈ precov, {ov.left}) := by
-        simp [h_y_ov_precov]
+        simp
         use ov_y
       rw [h_precov₀] at h_left
-      simp at h_left
       exact h_left
-      unfold Function.Injective
-      simp
+      simp [Function.Injective]
     case h.mpr Y =>
       intro h_hom_Y_X
       have h_Y_X_def_eq : Y = X := Set.eq_of_mem_singleton h_hom_Y_X
