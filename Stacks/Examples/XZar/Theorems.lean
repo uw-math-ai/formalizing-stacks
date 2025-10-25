@@ -251,8 +251,22 @@ instance instSiteXZar.{u} {C : Type u} {Cat : XZarCat.{u}} : @Site Obj (instCate
 
         -- Since we have an iso, it's in the coverings by axiom 1
         have h_iso := Iso.mk h_hom_Y_X' h_hom_X_Y'
-        have h_is_iso₁ : IsIso h_hom_Y_X' := h_iso
-        have h_is_iso₂ : IsIso h_hom_Y_X' := h_iso
+        have h_is_iso₁ : IsIso h_hom_Y_X' :=
+          IsIso.mk ⟨h_iso.inv, ⟨h_iso.hom_inv_id, h_iso.inv_hom_id⟩⟩
+        have h_is_iso₂ : IsIso h_hom_X_Y' :=
+          IsIso.mk ⟨h_iso.hom, ⟨h_iso.inv_hom_id, h_iso.hom_inv_id⟩⟩
+        let over₁ := Over.mk h_hom_Y_X'
+        let over₂ := Over.mk h_hom_Y_X'
+        let h_covering₁ := iso h_hom_Y_X' h_is_iso₁
+        let h_covering₂ := iso h_hom_X_Y' h_is_iso₂
+        -- {Over.mk h_hom_Y_X'} ∈ {cover | ⋃ ov ∈ cover, {left | left = ov.left} = {X}}
+        have h_over₂_from_Y : over₂.left = Y := by
+          
+          sorry
+
+        -- We have two over's in a precover that obey our axioms
+        simp
+        
         sorry
   }
 
