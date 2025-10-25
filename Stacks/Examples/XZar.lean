@@ -299,6 +299,17 @@ instance instSiteXZar.{u} {C : Type u} {Cat : XZarCat.{u}} : @Site Obj (instCate
     case h.mpr Y =>
       intro h_hom_Y_X
       have h_Y_X_def_eq : Y = X := Set.eq_of_mem_singleton h_hom_Y_X
+      have h_hom_Y_X : Hom Y X := by
+        apply Eq.subset
+        rw [h_Y_X_def_eq]
+      have h_hom_X_Y : Hom X Y := by
+        apply Eq.subset
+        rw [h_Y_X_def_eq]
+      have h_hom_Y_X' : Y ⟶ X := ULift.up (PLift.up h_hom_Y_X)
+      have h_hom_X_Y' : X ⟶ Y := ULift.up (PLift.up h_hom_X_Y)
+
+      -- Since we have an iso, it's in the coverings by axiom 1
+      have h_iso := Iso.mk h_hom_Y_X' h_hom_X_Y'
       simp_all
       
       sorry
