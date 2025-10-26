@@ -325,8 +325,12 @@ instance instSiteXZar.{u} {C : Type u} {Cat : XZarCat.{u}} : @Site Obj (instCate
         use witness_in_precov
         change ∃ x ∈ precov_containing_witness, Over.mk (x.hom ≫ witness.hom) = ov_comp
         exact ⟨witness_c, ⟨in_derived_cov, rfl⟩⟩
-        
-        sorry
+        rw [Over.mk_left]
+        simp_all
+        rename_i right
+        subst right h_covering h_Y_X_def_eq
+        simp_all only [Set.setOf_eq_eq_singleton, Set.mem_setOf_eq, Set.mem_singleton_iff, Iso.hom_inv_id,
+      Set.image_singleton, Over.mk_left, Set.iUnion_iUnion_eq_left, precov_containing_witness, covering, comp_over]
   }
 
 end XZar
