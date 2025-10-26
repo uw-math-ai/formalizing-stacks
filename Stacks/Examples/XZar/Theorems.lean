@@ -4,6 +4,7 @@ import Mathlib.CategoryTheory.Limits.Shapes.BinaryProducts
 import Mathlib.CategoryTheory.Sites.Precoverage
 import Mathlib.Topology.Defs.Basic
 import Mathlib.Tactic.ApplyFun
+import Mathlib.Data.Set.Lattice.Image
 import Stacks.Site
 import Stacks.Examples.XZar.XZarCat
 
@@ -205,8 +206,8 @@ instance instSiteXZar.{u} {C : Type u} {Cat : XZarCat.{u}} : @Site Obj (instCate
       -- where T is the domain,
       -- then T is kind of like a Pullback?
       -- and we can form A × B
+      simp_all
       ext
-      simp
       constructor
       case h.mp =>
         simp
@@ -239,78 +240,23 @@ instance instSiteXZar.{u} {C : Type u} {Cat : XZarCat.{u}} : @Site Obj (instCate
         case inj =>
           simp [Function.Injective]
       case h.mpr Y =>
-        -- Since X = Y, then the precover contains just an isomorphism
-        -- Thus, this is an over category where cod = dom
         intro h_hom_Y_X
+
         have h_Y_X_def_eq : Y = X := Set.eq_of_mem_singleton h_hom_Y_X
-        have h_hom_Y_X : Hom Y X := by
-          apply Eq.subset
+        have h_hom_Y_X    : Y ⟶ X := by
+          apply ULift.up
+          apply PLift.up
+          unfold Hom
           rw [h_Y_X_def_eq]
-        have h_hom_X_Y : Hom X Y := by
-          apply Eq.subset
-          rw [h_Y_X_def_eq]
-        have h_hom_Y_X' : Y ⟶ X := ULift.up (PLift.up h_hom_Y_X)
-        have h_hom_X_Y' : X ⟶ Y := ULift.up (PLift.up h_hom_X_Y)
 
-        -- Since we have an iso, it's in the coverings by axiom 1
-        have h_iso := Iso.mk h_hom_Y_X' h_hom_X_Y'
-        have h_is_iso₁ : IsIso h_hom_Y_X' :=
-          IsIso.mk ⟨h_iso.inv, ⟨h_iso.hom_inv_id, h_iso.inv_hom_id⟩⟩
-        have h_is_iso₂ : IsIso h_hom_X_Y' :=
-          IsIso.mk ⟨h_iso.hom, ⟨h_iso.inv_hom_id, h_iso.hom_inv_id⟩⟩
-        let over  := Over.mk h_iso.hom
-        let over₁ := Over.mk h_hom_Y_X'
-        let over₂ := Over.mk h_hom_X_Y'
-        let covering₁ := ({over₁} : Set _)
-        let covering₂ := ({over₂} : Set _)
-        let h_covering₁ : ⋃ ov ∈ covering₁, {left | left = ov.left} = {X} :=
-          iso h_hom_Y_X' h_is_iso₁
-        let h_covering₂ : ⋃ ov ∈ covering₂, {left | left = ov.left} = {Y} :=
-          iso h_hom_X_Y' h_is_iso₂
+        simp_all
 
-        let h_over₁_hom : Y ⟶ X := over₁.hom
-        let h_over₂_hom : X ⟶ Y := over₂.hom
+        let h_precov' : (·.left) '' precov = {X} := by
+          rw [Set.image_eq_iUnion, h_precov]
 
-        have h_over₂_from_Y : over₂.left = Y := by
-          apply_fun ({ b : Obj | b = ·})
-          change {over₂.left} = {Y}
-          rw [← h_covering₂]
-          change {over₂.left} = ⋃ ov ∈ ({over₂} : Set (Over Y)), {ov.left}
-          simp
-          simp [Function.Injective]
+        have ⟨⟨witness, in_over_left⟩, h⟩ := Set.eq_singleton_iff_nonempty_unique_mem.mp h_precov'
 
-        have h_over₁_from_Y : over₁.left = Y := by
-          apply_fun ({ b : Obj | b = ·})
-          change {over₁.left} = {Y}
-          rw [h_Y_X_def_eq]
-          rw [← h_covering₁]
-          change {over₁.left} = ⋃ ov ∈ ({over₁} : Set (Over X)), {ov.left}
-          simp
-          simp [Function.Injective]
-
-        have h_over₁_to_unit : over₁.right = { as := PUnit.unit } := rfl
-        have h_over₁_to_unit : over₂.right = { as := PUnit.unit } := rfl
-
-        have h_all_in_precover_right_punit : ∀ cov ∈ precov, cov.right = { as := PUnit.unit } := fun cov h_precov => rfl
-
-        have h_over₁_in_covering₁ : over₁ ∈ covering₁ := Set.mem_singleton over₁
-        have h_over₂_in_covering₂ : over₂ ∈ covering₂ := Set.mem_singleton over₂
-
-        rw [← h_covering₁] at h_precov
-        simp at h_precov
-
-        have h_left_same : ⋃ ov ∈ precov, {ov.left} = {over₁.left} := by
-          simp_all
-          exact h_covering₁
-
-        -- We have two over's in a precover that obey our axioms
-        use over₁
-        constructor
-        use over₁
-
-        have h : over₁ ∈ precov := by
-          
-          sorry
+        simp_all
 
         sorry
   }
