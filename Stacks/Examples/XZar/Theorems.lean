@@ -3,7 +3,14 @@ import Mathlib.CategoryTheory.Iso
 import Mathlib.CategoryTheory.Limits.Shapes.BinaryProducts
 import Mathlib.CategoryTheory.Sites.Precoverage
 import Mathlib.Topology.Defs.Basic
+import Mathlib.Tactic.ApplyFun
+import Mathlib.Data.Set.Lattice.Image
+import Mathlib.Data.Set.Image
+import Mathlib.Data.Set.Defs
+import Stacks.Site
+import Stacks.Examples.XZar.XZarCat
 
+open CategoryTheory
 open CategoryTheory (Category)
 open CategoryTheory (asIso)
 open CategoryTheory (Iso)
@@ -11,69 +18,7 @@ open CategoryTheory (IsIso)
 open CategoryTheory (Precoverage)
 open CategoryTheory.Limits
 
-/-
-Example 1 from Stacks project Site page.
--/
-
 namespace XZar
-
-@[ext]
-class Obj.{v} {C : Type v} [TopologicalSpace C] where
-  x : Set C
-  h_open : IsOpen x
-
-def Hom.{u} {C : Type u} [TopologicalSpace C] (X Y : @Obj C _) := X.x ⊆ Y.x
-
-instance Hom.instQuiver.{u} {C : Type u} [TopologicalSpace C] : Quiver.{u + 1} (@Obj.{u} C _) where
-  Hom X Y := Hom.{u} X Y |> PLift.{0} |> ULift
-
-abbrev XZarCat.{u} {C : Type u} := TopologicalSpace.{u} C
-
-instance instCategoryXZar.{u} {C : Type u} (Cat : XZarCat.{u})
-  : Category.{u} (@Obj.{u} C Cat) where
-  Hom X Y := @Hom.{u} C Cat X Y |> PLift.{0} |> ULift
-  id X := ⟨⟨.rfl⟩⟩
-  comp hom_xy hom_xz := by
-    constructor
-    constructor
-    match hom_xy, hom_xz with
-    | .up (.up hom_yz), .up (.up hom_xz) =>
-      rw [Hom] at hom_yz
-      rw [Hom] at hom_xz
-      exact Set.Subset.trans hom_yz hom_xz
-
-def PObj.{u} {C : Type u} {Cat : XZarCat.{u}}
-  (X Y : @Obj.{u} C Cat)
-  : @Obj.{u} C Cat := { x := X.x ∩ Y.x, h_open := IsOpen.inter X.h_open Y.h_open }
-
-structure Prod.{v} {C : Type v} {Cat : XZarCat.{v}}
-  (X Y : @Obj.{v} C Cat) where
-  P : @Obj.{v} C Cat := PObj X Y
-  p_hom_def_eq : P.x = X.x ∩ Y.x := by
-    unfold PObj
-    simp
-  π₁       : Hom P X
-  π₂       : Hom P Y
-
-instance instObjProd.{v} {C : Type v} {Cat : XZarCat.{v}}
-  (X Y : @Obj.{v} C Cat) (P : Prod X Y) : @Obj.{v} C Cat where
-  x := P.P.x
-  h_open := P.P.h_open
-
-def Prod.mk'.{v} {C : Type v} {Cat : XZarCat.{v}}
-  (X Y : @Obj.{v} C Cat) : Prod.{v} X Y :=
-  {
-    π₁ := fun inter h_subst =>
-    by
-      unfold Obj.x at h_subst
-      unfold PObj at h_subst
-      exact Set.mem_of_mem_inter_left (by assumption)
-    π₂ := fun inter h_subst =>
-    by
-      unfold Obj.x at h_subst
-      unfold PObj at h_subst
-      exact Set.mem_of_mem_inter_right (by assumption)
-  }
 
 instance instHasBinaryProductsXZar.{u} {C : Type u} {Cat : XZarCat.{u}} :
   HasBinaryProducts.{u, u} (@Obj C Cat) where
@@ -169,7 +114,8 @@ instance instHasBinaryProductsXZar.{u} {C : Type u} {Cat : XZarCat.{u}} :
       }
     }
 
-instance instHasPullbacksXZar.{u} {C : Type u} {Cat : XZarCat.{u}} : @HasPullbacks.{u, u} (@Obj.{u} C Cat) _ where
+instance instHasPullbacksXZar.{u} {C : Type u} {Cat : XZarCat.{u}} :
+  @HasPullbacks.{u, u} (@Obj.{u} C Cat) _ where
   has_limit := fun F@{ obj, map, map_id, map_comp } =>
     -- Left and right objects with morphisms to some central object
     let hom_left : (obj .left) ⟶ (obj .one)   := map WalkingCospan.Hom.inl
@@ -243,23 +189,154 @@ instance instHasPullbacksXZar.{u} {C : Type u} {Cat : XZarCat.{u}} : @HasPullbac
       }
     }
 
-instance instSiteXZar.{u} {C : Type u} {Cat : XZarCat.{u}} : @Site Obj (instCategoryXZar Cat) (@instHasPullbacksXZar C Cat) where
-  coverings := fun X (precov : Set (Over X)) => ∀ (hom : Over X), hom.left = X
-  iso {X Y} hom h_is_iso := by
-    match h_is_iso, hom with
-    | ⟨inv, ⟨inv_left, inv_right⟩⟩, .up (.up h_in) =>
-      have h_subst : X.x ⊆ Y.x := inv.down.down
-      have h_subst_hom : Hom X Y := h_subst
-      have h_eq : X.x = Y.x := subset_antisymm (by assumption) (by assumption)
-      intro precov
+instance instSiteXZar.{u} {C : Type u} {Cat : XZarCat.{u}} :
+  @Site Obj (instCategoryXZar.{u} Cat) (@instHasPullbacksXZar.{u} C Cat) :=
+  have iso {X Y : Obj} (hom : Y ⟶ X) (h_is_iso : IsIso hom) :
+    {Over.mk hom} ∈ {cover : Precover X | ⋃ ov ∈ cover, {left | left = ov.left} = {X}} := by
+      match h_is_iso, hom with
+      | ⟨inv, ⟨inv_left, inv_right⟩⟩, .up (.up h_in) =>
+        have h_subst : X.x ⊆ Y.x := inv.down.down
+        have h_subst_hom : Hom X Y := h_subst
+        have h_eq : X.x = Y.x := subset_antisymm (by assumption) (by assumption)
+        simp
+        ext
+        simp_all
+  {
+    coverings := fun X => { cover | (⋃ ov ∈ cover, { left | left = ov.left }) = ({X} : Set Obj) }
+    iso := iso
+    trans {X} precov h_precov h_in_cov := by
+      simp_all
       ext
       constructor
-      intro h
-      unfold Obj.x
-      unfold Obj.x at h
-      rw [h_eq]
-      exact h
-      
-      sorry
+      case h.mp =>
+        simp
+        intro
+          ov_x
+          ov_y
+          h_y_ov_precov
+          ov_mid
+          h_ov_mid_precover
+          ov_comp
+          h_ov_x_left_eq
+        rw [h_ov_x_left_eq]
+        rw [← ov_comp]
+        let precov_containing_ov_mid : Precover ov_y.left := (h_in_cov ov_y h_y_ov_precov).val
+        let property : ⋃ ov ∈ precov_containing_ov_mid, {ov.left} = {ov_y.left} :=
+          (h_in_cov ov_y h_y_ov_precov).property
+        apply_fun ({ b : Obj | b = ·})
+        case _ =>
+          simp
+          have h : ov_mid.left ∈ ({ov_y.left} : Set Obj) := by
+            rw [← property]
+            simp
+            use ov_mid
+          have h_left : ov_y.left ∈ ({X}: Set Obj) := by
+            rw [← h_precov]
+            simp
+            use ov_y
+          rw [h]
+          exact h_left
+        case inj =>
+          simp [Function.Injective]
+      case h.mpr Y =>
+        -- X = Y definitionally.
+        -- The precov may be empty. That is, I = ∅.
+
+        let h_precov₀ := h_precov
+
+        intro h_hom_Y_X
+
+        have h_X_in_precov : X ∈ ⋃ ov ∈ precov, {ov.left} := by
+          simp_all
+
+        have ⟨witness, dom, ⟨left, h_X_in_dom⟩⟩ := Set.mem_iUnion.mp h_X_in_precov
+        simp at left
+        have ⟨witness_in_precov, witness_is_dom⟩ := left
+
+        rw [← witness_is_dom] at h_X_in_dom
+        simp at h_X_in_dom
+
+        have h_Y_X_def_eq : Y = X := Set.eq_of_mem_singleton h_hom_Y_X
+        have h_hom_Y_X    : Y ⟶ X := by
+          apply ULift.up
+          apply PLift.up
+          unfold Hom
+          rw [h_Y_X_def_eq]
+        have h_hom_X_Y    : X ⟶ Y := by
+          apply ULift.up
+          apply PLift.up
+          unfold Hom
+          rw [h_Y_X_def_eq]
+
+        have iso  := Iso.mk h_hom_X_Y h_hom_Y_X
+        let comp_over : Over X := Over.mk (iso.hom ≫ iso.inv)
+
+        let covering : Set (Over X) := {comp_over}
+
+        have h_over_covering : ⋃ ov ∈ covering, {ov.left} = {X} := by
+          change ⋃ ov ∈ (Set.singleton comp_over), {ov.left} = {X}
+          rw [← Set.image_eq_iUnion]
+          simp [Set.singleton]
+          rw [CategoryTheory.Over.mk_left]
+
+        have h_precov_covering_eq_left : ⋃ ov ∈ covering, {ov.left} = ⋃ ov ∈ precov, {ov.left} :=
+          Eq.trans h_over_covering h_precov.symm
+
+        have h_precov' : precov ∈ {cover | ⋃ ov ∈ cover, {left | left = ov.left} = {X}} := h_precov
+        have h_precov_image : (·.left) '' precov = {X} := by
+          rw [← h_precov']
+          simp [Set.image_eq_iUnion]
+
+        have h_covering : (·.left) '' covering = {X} := by
+          rw [← h_over_covering]
+          simp [Set.image_eq_iUnion]
+
+        have h_images_eq : (·.left) '' precov = (·.left) '' covering :=
+          Eq.trans h_precov_image h_covering.symm
+
+        let precov_containing_witness : Precover witness.left :=
+          (h_in_cov witness witness_in_precov).val
+        let property : ⋃ ov ∈ precov_containing_witness, {ov.left} = {witness.left} :=
+          (h_in_cov witness witness_in_precov).property
+
+        have property' : witness.left ∈ (⋃ ov ∈ precov_containing_witness, {ov.left}) := by
+          simp_all
+
+        have ⟨witness_c, dom_c, ⟨left_c, h_X_in_dom_c⟩⟩ := Set.mem_iUnion.mp property'
+
+        simp at left_c
+
+        have ⟨in_derived_cov, _⟩ := left_c
+
+        -- Since we have X ⟶ witness.left and witness.left ⟶ X
+        -- we can make a cover
+        -- since X ⟶ X is the only morphism
+
+        let ov_comp : Over X := Over.mk (witness_c.hom ≫ witness.hom)
+
+        simp
+        use ov_comp
+        constructor
+        case h.left =>
+          use witness
+          use witness_in_precov
+          change ∃ x ∈ precov_containing_witness, Over.mk (x.hom ≫ witness.hom) = ov_comp
+          exact ⟨witness_c, ⟨in_derived_cov, rfl⟩⟩
+        case h.right =>
+          rw [Over.mk_left]
+          simp_all
+          rename_i right
+          subst right h_covering h_Y_X_def_eq
+          simp_all only [Set.setOf_eq_eq_singleton,
+            Set.mem_setOf_eq,
+            Set.mem_singleton_iff,
+            Iso.hom_inv_id,
+            Set.image_singleton,
+            Over.mk_left,
+            Set.iUnion_iUnion_eq_left,
+            precov_containing_witness,
+            covering,
+            comp_over]
+  }
 
 end XZar
