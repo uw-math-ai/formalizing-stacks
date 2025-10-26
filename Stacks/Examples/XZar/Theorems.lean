@@ -5,6 +5,8 @@ import Mathlib.CategoryTheory.Sites.Precoverage
 import Mathlib.Topology.Defs.Basic
 import Mathlib.Tactic.ApplyFun
 import Mathlib.Data.Set.Lattice.Image
+import Mathlib.Data.Set.Image
+import Mathlib.Data.Set.Defs
 import Stacks.Site
 import Stacks.Examples.XZar.XZarCat
 
@@ -200,12 +202,6 @@ instance instSiteXZar.{u} {C : Type u} {Cat : XZarCat.{u}} : @Site Obj (instCate
     coverings := fun X => { cover | (⋃ ov ∈ cover, { left | left = ov.left }) = ({X} : Set Obj) }
     iso := iso
     trans {X} precov h_precov h_in_cov := by
-      -- Since the Over's in precov are commutative triangles:
-      -- A ⟶ T
-      -- B ⟶ T
-      -- where T is the domain,
-      -- then T is kind of like a Pullback?
-      -- and we can form A × B
       simp_all
       ext
       constructor
@@ -240,7 +236,22 @@ instance instSiteXZar.{u} {C : Type u} {Cat : XZarCat.{u}} : @Site Obj (instCate
         case inj =>
           simp [Function.Injective]
       case h.mpr Y =>
+        -- X = Y definitionally.
+        -- The precov may be empty. That is, I = ∅.
+
+        let h_precov₀ := h_precov
+
         intro h_hom_Y_X
+
+        have h_X_in_precov : X ∈ ⋃ ov ∈ precov, {ov.left} := by
+          simp_all
+
+        have ⟨witness, dom, ⟨left, h_X_in_dom⟩⟩ := Set.mem_iUnion.mp h_X_in_precov
+        simp at left
+        have ⟨witness_in_precov, witness_is_dom⟩ := left
+
+        rw [← witness_is_dom] at h_X_in_dom
+        simp at h_X_in_dom
 
         have h_Y_X_def_eq : Y = X := Set.eq_of_mem_singleton h_hom_Y_X
         have h_hom_Y_X    : Y ⟶ X := by
@@ -248,16 +259,73 @@ instance instSiteXZar.{u} {C : Type u} {Cat : XZarCat.{u}} : @Site Obj (instCate
           apply PLift.up
           unfold Hom
           rw [h_Y_X_def_eq]
+        have h_hom_X_Y    : X ⟶ Y := by
+          apply ULift.up
+          apply PLift.up
+          unfold Hom
+          rw [h_Y_X_def_eq]
 
-        simp_all
+        have iso  := Iso.mk h_hom_X_Y h_hom_Y_X
+        let comp_over : Over X := Over.mk (iso.hom ≫ iso.inv)
 
-        let h_precov' : (·.left) '' precov = {X} := by
-          rw [Set.image_eq_iUnion, h_precov]
+        let covering : Set (Over X) := {comp_over}
 
-        have ⟨⟨witness, in_over_left⟩, h⟩ := Set.eq_singleton_iff_nonempty_unique_mem.mp h_precov'
+        have h_over_covering : ⋃ ov ∈ covering, {ov.left} = {X} := by
+          change ⋃ ov ∈ (Set.singleton comp_over), {ov.left} = {X}
+          rw [← Set.image_eq_iUnion]
+          simp [Set.singleton]
+          rw [CategoryTheory.Over.mk_left]
 
-        simp_all
+        have h_precov_covering_eq_left : ⋃ ov ∈ covering, {ov.left} = ⋃ ov ∈ precov, {ov.left} :=
+          Eq.trans h_over_covering h_precov.symm
 
+        have h_precov' : precov ∈ {cover | ⋃ ov ∈ cover, {left | left = ov.left} = {X}} := h_precov
+        have h_precov_image : (·.left) '' precov = {X} := by
+          rw [← h_precov']
+          simp [Set.image_eq_iUnion]
+
+        have h_covering : (·.left) '' covering = {X} := by
+          rw [← h_over_covering]
+          simp [Set.image_eq_iUnion]
+
+        have h_images_eq : (·.left) '' precov = (·.left) '' covering :=
+          Eq.trans h_precov_image h_covering.symm
+
+        have precov_in_all_coverings : {precov}
+          ⊆ {cover : Precover X | ⋃ ov ∈ cover, {left | left = ov.left} = {X}} := by
+            simp_all
+
+        have comp_covering_in_all_coverings : {covering}
+          ⊆ {cover : Precover X | ⋃ ov ∈ cover, {left | left = ov.left} = {X}} := by
+            simp_all
+
+        let precov_containing_witness : Precover witness.left := (h_in_cov witness witness_in_precov).val
+        let property : ⋃ ov ∈ precov_containing_witness, {ov.left} = {witness.left} :=
+          (h_in_cov witness witness_in_precov).property
+
+        have property' : witness.left ∈ (⋃ ov ∈ precov_containing_witness, {ov.left}) := by
+          simp_all
+
+        have ⟨witness_c, dom_c, ⟨left_c, h_X_in_dom_c⟩⟩ := Set.mem_iUnion.mp property'
+
+        simp at left_c
+
+        have ⟨in_derived_cov, _⟩ := left_c
+
+        -- Since we have X ⟶ witness.left and witness.left ⟶ X
+        -- we can make a cover
+        -- since X ⟶ X is the only morphism
+
+        let ov_comp : Over X := Over.mk (witness_c.hom ≫ witness.hom)
+
+        simp
+        use ov_comp
+        constructor
+        use witness
+        use witness_in_precov
+        change ∃ x ∈ precov_containing_witness, Over.mk (x.hom ≫ witness.hom) = ov_comp
+        exact ⟨witness_c, ⟨in_derived_cov, rfl⟩⟩
+        
         sorry
   }
 
