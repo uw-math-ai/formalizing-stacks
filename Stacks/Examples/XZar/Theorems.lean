@@ -114,7 +114,8 @@ instance instHasBinaryProductsXZar.{u} {C : Type u} {Cat : XZarCat.{u}} :
       }
     }
 
-instance instHasPullbacksXZar.{u} {C : Type u} {Cat : XZarCat.{u}} : @HasPullbacks.{u, u} (@Obj.{u} C Cat) _ where
+instance instHasPullbacksXZar.{u} {C : Type u} {Cat : XZarCat.{u}} :
+  @HasPullbacks.{u, u} (@Obj.{u} C Cat) _ where
   has_limit := fun F@{ obj, map, map_id, map_comp } =>
     -- Left and right objects with morphisms to some central object
     let hom_left : (obj .left) ⟶ (obj .one)   := map WalkingCospan.Hom.inl
@@ -188,8 +189,10 @@ instance instHasPullbacksXZar.{u} {C : Type u} {Cat : XZarCat.{u}} : @HasPullbac
       }
     }
 
-instance instSiteXZar.{u} {C : Type u} {Cat : XZarCat.{u}} : @Site Obj (instCategoryXZar.{u} Cat) (@instHasPullbacksXZar.{u} C Cat) :=
-  have iso {X Y : Obj} (hom : Y ⟶ X) (h_is_iso : IsIso hom) : {Over.mk hom} ∈ {cover : Precover X | ⋃ ov ∈ cover, {left | left = ov.left} = {X}} := by
+instance instSiteXZar.{u} {C : Type u} {Cat : XZarCat.{u}} :
+  @Site Obj (instCategoryXZar.{u} Cat) (@instHasPullbacksXZar.{u} C Cat) :=
+  have iso {X Y : Obj} (hom : Y ⟶ X) (h_is_iso : IsIso hom) :
+    {Over.mk hom} ∈ {cover : Precover X | ⋃ ov ∈ cover, {left | left = ov.left} = {X}} := by
       match h_is_iso, hom with
       | ⟨inv, ⟨inv_left, inv_right⟩⟩, .up (.up h_in) =>
         have h_subst : X.x ⊆ Y.x := inv.down.down
@@ -291,15 +294,8 @@ instance instSiteXZar.{u} {C : Type u} {Cat : XZarCat.{u}} : @Site Obj (instCate
         have h_images_eq : (·.left) '' precov = (·.left) '' covering :=
           Eq.trans h_precov_image h_covering.symm
 
-        have precov_in_all_coverings : {precov}
-          ⊆ {cover : Precover X | ⋃ ov ∈ cover, {left | left = ov.left} = {X}} := by
-            simp_all
-
-        have comp_covering_in_all_coverings : {covering}
-          ⊆ {cover : Precover X | ⋃ ov ∈ cover, {left | left = ov.left} = {X}} := by
-            simp_all
-
-        let precov_containing_witness : Precover witness.left := (h_in_cov witness witness_in_precov).val
+        let precov_containing_witness : Precover witness.left :=
+          (h_in_cov witness witness_in_precov).val
         let property : ⋃ ov ∈ precov_containing_witness, {ov.left} = {witness.left} :=
           (h_in_cov witness witness_in_precov).property
 
@@ -321,16 +317,26 @@ instance instSiteXZar.{u} {C : Type u} {Cat : XZarCat.{u}} : @Site Obj (instCate
         simp
         use ov_comp
         constructor
-        use witness
-        use witness_in_precov
-        change ∃ x ∈ precov_containing_witness, Over.mk (x.hom ≫ witness.hom) = ov_comp
-        exact ⟨witness_c, ⟨in_derived_cov, rfl⟩⟩
-        rw [Over.mk_left]
-        simp_all
-        rename_i right
-        subst right h_covering h_Y_X_def_eq
-        simp_all only [Set.setOf_eq_eq_singleton, Set.mem_setOf_eq, Set.mem_singleton_iff, Iso.hom_inv_id,
-      Set.image_singleton, Over.mk_left, Set.iUnion_iUnion_eq_left, precov_containing_witness, covering, comp_over]
+        case h.left =>
+          use witness
+          use witness_in_precov
+          change ∃ x ∈ precov_containing_witness, Over.mk (x.hom ≫ witness.hom) = ov_comp
+          exact ⟨witness_c, ⟨in_derived_cov, rfl⟩⟩
+        case h.right =>
+          rw [Over.mk_left]
+          simp_all
+          rename_i right
+          subst right h_covering h_Y_X_def_eq
+          simp_all only [Set.setOf_eq_eq_singleton,
+            Set.mem_setOf_eq,
+            Set.mem_singleton_iff,
+            Iso.hom_inv_id,
+            Set.image_singleton,
+            Over.mk_left,
+            Set.iUnion_iUnion_eq_left,
+            precov_containing_witness,
+            covering,
+            comp_over]
   }
 
 end XZar
