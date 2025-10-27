@@ -337,6 +337,24 @@ instance instSiteXZar.{u} {C : Type u} {Cat : XZarCat.{u}} :
             precov_containing_witness,
             covering,
             comp_over]
+    pullback {X} (ov : Over X) (precov : Precover X) h:= by
+      simp_all
+      rw [← Set.image_eq_iUnion]
+      -- We have defined the binary product as the intersection
+      -- We don't know anything about ov.left
+      -- but in the pullback ⋃ f ∈ precov, pullback y.hom ov.hom,
+      -- y.left = x,
+      -- because h : ⋃ ov ∈ precov, {ov.left} = {x}
+      -- so, the pullback in ⋃ f ∈ precov, pullback y.hom ov.hom
+      have h : ∀ ov ∈ precov, ov.left = X := fun ov h_in_precov => by
+        have h' : ov.left ∈ (⋃ ov ∈ precov, {ov.left}) := by
+          apply Set.mem_iUnion.mpr
+          use ov
+          simp
+          exact h_in_precov
+        rw [h] at h'
+        exact Set.eq_of_mem_singleton h'
+      sorry
   }
 
 end XZar
