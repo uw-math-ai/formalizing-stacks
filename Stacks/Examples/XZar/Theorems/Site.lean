@@ -268,7 +268,18 @@ def pullback.{u} {C : Type u} {Cat : XZarCat.{u}} {X : @Obj.{u} C Cat}
     -- We jut need to show that prod.P = i.left × ov.left
     -- we can probably do this with a few morphisms
     unfold Obj.x at *
-    
+
+    let prod' := Prod.mk' i.left ov.left
+
+    have h : prod₀.x ⊆ i.left.x ∩ ov.left.x := by
+      apply Set.subset_inter_iff.mpr
+      constructor
+      repeat assumption
+
+    have hom_prod₀_prod' : prod₀ ⟶ prod'.P := ⟨⟨by
+      unfold Hom
+      rw [Prod.p_hom_def_eq]
+      exact h⟩⟩
 
     have h := trans
   sorry
