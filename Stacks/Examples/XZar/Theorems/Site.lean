@@ -190,7 +190,7 @@ def pullback.{u} {C : Type u} {Cat : XZarCat.{u}} {X : @Obj.{u} C Cat}
   -- y.left = x,
   -- because h : ⋃ ov ∈ precov, {ov.left} = {x}
   -- so, the pullback in ⋃ f ∈ precov, pullback y.hom ov.hom
-  have h : ∀ ov ∈ precov, ov.left = X := fun ov h_in_precov => by
+  have h_all_precov_left_x : ∀ ov ∈ precov, ov.left = X := fun ov h_in_precov => by
     simp_all
     have h' : ov.left ∈ (⋃ ov ∈ precov, {ov.left}) := by
       apply Set.mem_iUnion.mpr
@@ -199,7 +199,45 @@ def pullback.{u} {C : Type u} {Cat : XZarCat.{u}} {X : @Obj.{u} C Cat}
       exact h_in_precov
     rw [h_precov] at h'
     exact Set.eq_of_mem_singleton h'
-  
+  simp
+  -- Since y ∈ precov, then y.left = X
+  ext
+  constructor
+  case h.mp Y =>
+    intro h_all_pullbacks_in_precov
+    simp_all
+    have ⟨i, h_i_precov, y_def_eq_pullback⟩ := h_all_pullbacks_in_precov
+    -- Since i is in precov, then its left is X
+    -- therefore, it is the identity map?
+    -- We can probably construct an "equivalent" over
+    -- from ov.hom
+    -- or we can use apply_fun and show they are equivalent?
+    have h_i_left : i.left = X := h i h_i_precov
+
+    -- We can probably use trans or iso here
+    -- since i is an Over X with left = X
+    -- we just need to make an inverse, which is pretty easy
+    let i_hom : i.left ⟶ X := i.hom
+    let i_hom_inv : X ⟶ i.left := by
+      rw [h_i_left]
+      exact CategoryStruct.id X
+    let i_hom_iso := Iso.mk i_hom i_hom_inv
+
+    -- This seems like we should use the definition of our pullbacks
+    -- pullback point = the intersection of the sets i.left and ov.left
+    -- we can get the cone
+    let cone := pullback.cone i.hom ov.hom
+    let left := cone.π.app .left
+    let right := cone.π.app .right
+    simp at left
+    simp at right
+
+    -- We can also derive a product
+    -- So we get an equality because ⟶ gives us subsets in both directions
+
+    
+
+    have h := trans
   sorry
 
 instance instSiteXZar.{u} {C : Type u} {Cat : XZarCat.{u}} :
