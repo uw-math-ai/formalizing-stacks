@@ -7,6 +7,7 @@ import Mathlib.Tactic.ApplyFun
 import Mathlib.Data.Set.Lattice.Image
 import Mathlib.Data.Set.Image
 import Mathlib.Data.Set.Defs
+import Mathlib.CategoryTheory.Comma.Over.Pullback
 import Stacks.Site
 import Stacks.Examples.XZar.XZarCat
 
@@ -339,7 +340,6 @@ instance instSiteXZar.{u} {C : Type u} {Cat : XZarCat.{u}} :
             comp_over]
     pullback {X} (ov : Over X) (precov : Precover X) h:= by
       simp_all
-      rw [← Set.image_eq_iUnion]
       -- We have defined the binary product as the intersection
       -- We don't know anything about ov.left
       -- but in the pullback ⋃ f ∈ precov, pullback y.hom ov.hom,
@@ -354,7 +354,27 @@ instance instSiteXZar.{u} {C : Type u} {Cat : XZarCat.{u}} :
           exact h_in_precov
         rw [h] at h'
         exact Set.eq_of_mem_singleton h'
-      sorry
+      ext
+      case h x =>
+        simp
+        constructor
+        case mp =>
+          intro ⟨i, h_in_precov, h⟩
+          simp_all
+          -- Since i ∈ precov, then i.left = X
+          -- So hom is just the identity
+          have h_i_eq : i = Over.mk (CategoryStruct.id X) := by
+            
+            sorry
+          rw [h_i_eq]
+          simp
+          ext
+          constructor
+          intro h
+          unfold Obj.x at *
+          have h : Iso (pullback (𝟙 X)) (Functor.id (Over X)) := CategoryTheory.Over.pullbackId
+          
+          sorry
   }
 
 end XZar
