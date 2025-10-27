@@ -362,17 +362,6 @@ instance instSiteXZar.{u} {C : Type u} {Cat : XZarCat.{u}} :
           intro ⟨i, h_in_precov, h⟩
           simp_all
           -- Since i ∈ precov, then i.left = X
-          -- So hom is just the identity
-          have h_i_eq : i = Over.mk (CategoryStruct.id X) := by
-            
-            sorry
-          rw [h_i_eq]
-          simp
-          ext
-          constructor
-          intro h
-          unfold Obj.x at *
-          have h : Iso (pullback (𝟙 X)) (Functor.id (Over X)) := CategoryTheory.Over.pullbackId
           
           sorry
   }
