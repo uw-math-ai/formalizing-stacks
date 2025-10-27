@@ -4,9 +4,18 @@ import Mathlib.CategoryTheory.Types.Basic
 import Stacks.Site
 
 open CategoryTheory
+open CategoryTheory.Limits
 
 abbrev JointlySurjective.{u} {Y : Type u} (U : Precover Y)
   := ∀ y : Y, ∃ f ∈ U, ∃ x : f.left, y = f.hom x
+
+instance HasPullbacks.{u} : HasPullbacks' (Type u) where
+  pullback f g := {
+    obj := { p : f.left × g.left // f.hom p.fst = g.hom p.snd }
+    fst p := p.val.fst
+    snd p := p.val.snd
+    is_pullback := sorry
+  }
 
 def SurjectiveFamiliesSite.{u} : Site (Type u) := {
   coverings X := setOf JointlySurjective
@@ -30,5 +39,12 @@ def SurjectiveFamiliesSite.{u} : Site (Type u) := {
     · exists z
       simp
       rw [y_is_f_x, x_is_g_z]
-  pullback := sorry
+  pullback f U U_jointly_surjective y := by
+    obtain ⟨ g, g_in_U, x, f_y_is_g_x ⟩ := U_jointly_surjective (f.hom y)
+    exists Over.mk (HasPullbacks'.pullback g f).snd
+    apply And.intro
+    · exists g
+    · exists by
+        exists (x, y)
+        rw [f_y_is_g_x]
 }
