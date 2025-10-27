@@ -227,14 +227,31 @@ def pullback.{u} {C : Type u} {Cat : XZarCat.{u}} {X : @Obj.{u} C Cat}
     -- pullback point = the intersection of the sets i.left and ov.left
     -- we can get the cone
     let cone := pullback.cone i.hom ov.hom
-    let left := cone.π.app .left
-    let right := cone.π.app .right
-    simp at left
-    simp at right
+
+    let left  : cone.pt ⟶ i.left  := cone.fst
+    let right : cone.pt ⟶ ov.left := cone.snd
+
+    have h := CategoryTheory.Limits.PullbackCone.eta cone
 
     -- We can also derive a product
-    -- So we get an equality because ⟶ gives us subsets in both directions
 
+    let prod := Prod.mk' i.left ov.left
+
+    let π₁ : prod.P ⟶ i.left := ⟨⟨prod.π₁⟩⟩
+    let π₂ : prod.P ⟶ ov.left := ⟨⟨prod.π₂⟩⟩
+
+    -- And we can induce a morphism from cone.pt to prod.pt
+    have cone_pt_prod := Limits.prod.lift left right
+
+    have prod_subset_i  : (i.left.x ∩ ov.left.x) ⊆ i.left.x  := π₁.down.down
+    have prod_subset_ov : (i.left.x ∩ ov.left.x) ⊆ ov.left.x := π₂.down.down
+
+    have cone_subset_i   : cone.pt.x ⊆ i.left.x  := left.down.down
+    have cone_subset_ov  : cone.pt.x ⊆ ov.left.x := right.down.down
+
+    -- and the product gives us the intersection
+
+    -- We jut need to show that prod.P = i.left × ov.left
     
 
     have h := trans
