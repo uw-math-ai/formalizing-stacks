@@ -231,27 +231,43 @@ def pullback.{u} {C : Type u} {Cat : XZarCat.{u}} {X : @Obj.{u} C Cat}
     let left  : cone.pt ⟶ i.left  := cone.fst
     let right : cone.pt ⟶ ov.left := cone.snd
 
+    let pullback_left  := pullback.fst i.hom ov.hom
+    let pullback_right := pullback.snd i.hom ov.hom
+
+    simp at pullback_left
+    simp at pullback_right
+
+    rw [← y_def_eq_pullback] at pullback_left
+    rw [← y_def_eq_pullback] at pullback_right
+
+    have h_y_subset₁ : Y.x ⊆ i.left.x  := pullback_left.down.down
+    have h_y_subset₂ : Y.x ⊆ ov.left.x := pullback_right.down.down
+
     have h := CategoryTheory.Limits.PullbackCone.eta cone
 
     -- We can also derive a product
 
-    let prod := Prod.mk' i.left ov.left
+    let prod₀ := prod i.left ov.left
 
-    let π₁ : prod.P ⟶ i.left := ⟨⟨prod.π₁⟩⟩
-    let π₂ : prod.P ⟶ ov.left := ⟨⟨prod.π₂⟩⟩
+    let π₁ : prod₀ ⟶ i.left  := prod.fst
+    let π₂ : prod₀ ⟶ ov.left := prod.snd
 
     -- And we can induce a morphism from cone.pt to prod.pt
-    have cone_pt_prod := Limits.prod.lift left right
+    have cone_pt_prod : cone.pt ⟶ prod₀ := Limits.prod.lift left right
 
-    have prod_subset_i  : (i.left.x ∩ ov.left.x) ⊆ i.left.x  := π₁.down.down
-    have prod_subset_ov : (i.left.x ∩ ov.left.x) ⊆ ov.left.x := π₂.down.down
+    have prod_subset_i  : prod₀.x ⊆ i.left.x  := π₁.down.down
+    have prod_subset_ov : prod₀.x ⊆ ov.left.x := π₂.down.down
 
     have cone_subset_i   : cone.pt.x ⊆ i.left.x  := left.down.down
     have cone_subset_ov  : cone.pt.x ⊆ ov.left.x := right.down.down
 
+    have cone_subset_prod : cone.pt.x ⊆ prod₀.x  := cone_pt_prod.down.down
+
     -- and the product gives us the intersection
 
     -- We jut need to show that prod.P = i.left × ov.left
+    -- we can probably do this with a few morphisms
+    unfold Obj.x at *
     
 
     have h := trans
