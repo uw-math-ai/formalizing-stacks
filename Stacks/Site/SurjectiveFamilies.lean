@@ -1,4 +1,5 @@
 import Mathlib.CategoryTheory.Category.Basic
+import Mathlib.CategoryTheory.ConcreteCategory.Basic
 import Mathlib.CategoryTheory.Types.Basic
 import Stacks.Site
 
@@ -9,25 +10,25 @@ abbrev JointlySurjective.{u} {Y : Type u} (U : Precover Y)
 
 def SurjectiveFamiliesSite.{u} : Site (Type u) := {
   coverings X := setOf JointlySurjective
-  iso f hf y := Exists.intro (Over.mk f) (And.intro rfl (Exists.intro (inv f y) sorry))
-  trans U hU V y := match hU y with
-    | Exists.intro w (And.intro hw (Exists.intro x p)) => match V w sorry with
-      | Subtype.mk a q => match q x with
-        | Exists.intro f (And.intro o (Exists.intro j l)) =>
-          Exists.intro (Over.mk (f.hom ≫ w.hom))
-            (And.intro (Exists.intro w (Exists.intro hw (by
-              constructor
-              constructor
-              · exact sorry
-              · exact sorry
-              · exact f
-            )))
-            (Exists.intro j (by
-              rw [p]
-              rw [l]
-              rfl
-            )))
+  iso f hf y := by
+    exists Over.mk f
+    constructor
+    · rfl
+    · exists inv f y
+      simp
+      have p := (comp_apply (inv f) f y)
+      simp at p
+      exact p
+  trans U U_jointly_surjective V y := by
+    obtain ⟨ f, f_in_U, x, y_is_f_x ⟩ := U_jointly_surjective y
+    obtain ⟨ g, g_in_V_f, z, x_is_g_z ⟩ := (V f f_in_U).property x
+    exists (Over.mk (g.hom ≫ f.hom))
+    apply And.intro
+    · exists f
+      exists f_in_U
+      exists g
+    · exists z
+      simp
+      rw [y_is_f_x, x_is_g_z]
   pullback := sorry
 }
-
-#check SurjectiveFamiliesSite.coverings
