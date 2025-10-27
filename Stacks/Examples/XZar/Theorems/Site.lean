@@ -205,14 +205,14 @@ def pullback.{u} {C : Type u} {Cat : XZarCat.{u}} {X : @Obj.{u} C Cat}
   constructor
   case h.mp Y =>
     intro h_all_pullbacks_in_precov
-    simp_all
+    simp at h_all_pullbacks_in_precov
     have ⟨i, h_i_precov, y_def_eq_pullback⟩ := h_all_pullbacks_in_precov
     -- Since i is in precov, then its left is X
     -- therefore, it is the identity map?
     -- We can probably construct an "equivalent" over
     -- from ov.hom
     -- or we can use apply_fun and show they are equivalent?
-    have h_i_left : i.left = X := h i h_i_precov
+    have h_i_left : i.left = X := h_all_precov_left_x i h_i_precov
 
     -- We can probably use trans or iso here
     -- since i is an Over X with left = X
@@ -281,7 +281,46 @@ def pullback.{u} {C : Type u} {Cat : XZarCat.{u}} {X : @Obj.{u} C Cat}
       rw [Prod.p_hom_def_eq]
       exact h⟩⟩
 
-    have h := trans
+    have hom_prod'_prod₀ : prod'.P ⟶ prod₀ := ⟨⟨by
+      unfold Hom
+      unfold Obj.x
+      change prod'.P.x ⊆ prod₀.x
+      rw [Prod.p_hom_def_eq]
+      exact fun x h => by
+        unfold Obj.x at *
+        apply Set.mem_of_mem_of_subset
+        exact h
+        exact fun x h => by
+          
+          sorry
+    ⟩⟩
+
+    -- Y is a subset of i.left and ov.left
+    -- so Y is the intersection of i.left and ov.left
+
+    have h_y_inter : Y.x ⊆ i.left.x ∩ ov.left.x := by
+      apply Set.subset_inter_iff.mpr
+      constructor
+      repeat assumption
+
+    -- So Y ⟶ Prod
+    have hom_y_prod : Y ⟶ prod'.P := ⟨⟨h_y_inter⟩⟩
+
+    -- prod is a subset of ov.left
+    -- and  Y
+    unfold Obj.x at *
+
+    apply Set.mem_singleton_iff.mpr
+    ext
+    constructor
+    case x.h.mp x =>
+      intro h
+      exact h_y_subset₂ h
+    case x.h.mpr x =>
+      intro h
+      unfold Obj.x at *
+      
+      sorry
   sorry
 
 instance instSiteXZar.{u} {C : Type u} {Cat : XZarCat.{u}} :
