@@ -15,5 +15,5 @@ structure Site.{u, v} (C : Type v) [Category.{u, v} C] [HasPullbacks.{u, v} C] w
   trans {X : C} (U : Precover X) (hU : U ∈ coverings X)
         (V : ∀ f ∈ U, { cover // cover ∈ coverings f.left }) :
     { Over.mk (g.hom ≫ f.hom) | (f : Over X) (hf : f ∈ U) (g ∈ (V f hf).val) } ∈ coverings X
-  pullback {X : C} (f : Over X) (U : Precover X) (hU : U ∈ coverings X) :=
+  pullback {X : C} (f : Over X) (U : Precover X) (hU : U ∈ coverings X) :
     { Over.mk (pullback.snd g.hom f.hom) | g ∈ U } ∈ coverings f.left
