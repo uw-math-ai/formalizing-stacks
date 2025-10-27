@@ -199,9 +199,7 @@ def pullback.{u} {C : Type u} {Cat : XZarCat.{u}} {X : @Obj.{u} C Cat}
       exact h_in_precov
     rw [h_precov] at h'
     exact Set.eq_of_mem_singleton h'
-  apply Set.mem_of_mem_of_subset
   
-  have functor_id : ∀ ov ∈ precov, ∃ (f : ov.hom 
   sorry
 
 instance instSiteXZar.{u} {C : Type u} {Cat : XZarCat.{u}} :
