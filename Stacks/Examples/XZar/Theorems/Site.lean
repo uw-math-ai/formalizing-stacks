@@ -182,7 +182,8 @@ def trans.{u} {C : Type u} {Cat : XZarCat.{u}} {X : @Obj.{u} C Cat}
 def pullback.{u} {C : Type u} {Cat : XZarCat.{u}} {X : @Obj.{u} C Cat}
   (ov : Over X) (precov : Precover X) (h_precov : precov ∈ coverings X)
   : {x | ∃ g ∈ precov, Over.mk (pullback.snd g.hom ov.hom) = x} ∈ coverings ov.left := by
-  simp_all
+  simp only [coverings] at *
+  change ⋃ ov ∈ precov, {left | left = ov.left} = {X} at h_precov
   -- We have defined the binary product as the intersection
   -- We don't know anything about ov.left
   -- but in the pullback ⋃ f ∈ precov, pullback y.hom ov.hom,
@@ -190,6 +191,7 @@ def pullback.{u} {C : Type u} {Cat : XZarCat.{u}} {X : @Obj.{u} C Cat}
   -- because h : ⋃ ov ∈ precov, {ov.left} = {x}
   -- so, the pullback in ⋃ f ∈ precov, pullback y.hom ov.hom
   have h : ∀ ov ∈ precov, ov.left = X := fun ov h_in_precov => by
+    simp_all
     have h' : ov.left ∈ (⋃ ov ∈ precov, {ov.left}) := by
       apply Set.mem_iUnion.mpr
       use ov
@@ -197,18 +199,10 @@ def pullback.{u} {C : Type u} {Cat : XZarCat.{u}} {X : @Obj.{u} C Cat}
       exact h_in_precov
     rw [h_precov] at h'
     exact Set.eq_of_mem_singleton h'
-  ext
-  case h x =>
-    simp
-    constructor
-    case mp =>
-      intro ⟨i, h_in_precov, h⟩
-      simp_all
-      -- Since i ∈ precov, then i.left = X
-      ext
-      constructor
-      
-      sorry
+  apply Set.mem_of_mem_of_subset
+  
+  have functor_id : ∀ ov ∈ precov, ∃ (f : ov.hom 
+  sorry
 
 instance instSiteXZar.{u} {C : Type u} {Cat : XZarCat.{u}} :
   @Site Obj (instCategoryXZar.{u} Cat) (@instHasPullbacksXZar.{u} C Cat) :=
