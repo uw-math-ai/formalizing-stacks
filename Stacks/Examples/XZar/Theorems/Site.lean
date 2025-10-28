@@ -336,7 +336,24 @@ def pullback.{u} {C : Type u} {Cat : XZarCat.{u}} {X : @Obj.{u} C Cat}
 
     have iso_cones := CategoryTheory.Limits.PullbackCone.eta cone'
 
-    simp_all
+    have h₁ : i.left.x ∩ ov.left.x ⊆ X.x := by
+      simp_all
+
+    have h₃ : X.x ∩ ov.left.x ⊆ X.x := by
+      simp_all
+
+    have h₂ : Y.x ⊆ i.left.x ∩ ov.left.x := h_y_inter
+
+    have h₄ : Y.x ⊆ X.x := by
+      simp_all
+
+    have h₅ : prod'.P.x = i.left.x ∩ ov.left.x := by
+      unfold Obj.x
+      change prod'.P.x = i.left.x ∩ ov.left.x
+      rw [Prod.p_hom_def_eq]
+
+    have trans := Set.Subset.trans h₂ h₁
+
     ext
     unfold Obj.x
     constructor
@@ -347,9 +364,7 @@ def pullback.{u} {C : Type u} {Cat : XZarCat.{u}} {X : @Obj.{u} C Cat}
       intro h_in_ov_left
       unfold Obj.x at *
       apply Set.mem_of_mem_of_subset
-      exact (hom_ov_left_x.down.down h_in_ov_left)
-      unfold Obj.x
-      rw [← y_def_eq_pullback]
+      
       
       sorry
   sorry
