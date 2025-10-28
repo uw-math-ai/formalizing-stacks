@@ -243,7 +243,7 @@ def pullback.{u} {C : Type u} {Cat : XZarCat.{u}} {X : @Obj.{u} C Cat}
     have h_y_subset₁ : Y.x ⊆ i.left.x  := pullback_left.down.down
     have h_y_subset₂ : Y.x ⊆ ov.left.x := pullback_right.down.down
 
-    have h := CategoryTheory.Limits.PullbackCone.eta cone
+    have h_iso_cone := CategoryTheory.Limits.PullbackCone.eta cone
 
     -- We can also derive a product
 
@@ -281,20 +281,6 @@ def pullback.{u} {C : Type u} {Cat : XZarCat.{u}} {X : @Obj.{u} C Cat}
       rw [Prod.p_hom_def_eq]
       exact h⟩⟩
 
-    have hom_prod'_prod₀ : prod'.P ⟶ prod₀ := ⟨⟨by
-      unfold Hom
-      unfold Obj.x
-      change prod'.P.x ⊆ prod₀.x
-      rw [Prod.p_hom_def_eq]
-      exact fun x h => by
-        unfold Obj.x at *
-        apply Set.mem_of_mem_of_subset
-        exact h
-        exact fun x h => by
-          
-          sorry
-    ⟩⟩
-
     -- Y is a subset of i.left and ov.left
     -- so Y is the intersection of i.left and ov.left
 
@@ -310,15 +296,60 @@ def pullback.{u} {C : Type u} {Cat : XZarCat.{u}} {X : @Obj.{u} C Cat}
     -- and  Y
     unfold Obj.x at *
 
-    apply Set.mem_singleton_iff.mpr
+    -- prod₀ is a subset of ov.left
+    -- and cone.pt is a subset of prod₀
+    -- and prod₀ is the intersection
+    -- so ov.left is in the intersection
+    -- that is, it's in Y
+    -- cone.pt is a subset of ov.left
+    -- so if something is in ov.left
+    -- it is in cone.pt
+    -- furthermore, h_eta_cone tells us
+    -- we can make a hom either way from cone to pullbackcone.mk
+
+    -- Since we have a hom from prod₀ to prod'.P, prod₀ must be a subset of ov.left ∩ i.left
+
+    -- We should be able to retrieve the things ov.left and i.left go to from the cone
+    -- i.hom and ov.hom are f and g
+    let f := i.hom
+    let g := ov.hom
+    simp at f
+    simp at g
+
+    have hom_i_left_x : i.left ⟶ X := i_hom
+    have hom_ov_left_x : ov.left ⟶ X := ov.hom
+
+    have hom_cone_fst_snd_comp : cone.fst ≫ f = cone.snd ≫ g := by
+      simp_all
+      subst y_def_eq_pullback
+      simp_all only [Functor.id_obj,
+      Functor.const_obj_obj, limit.cone_x, PullbackCone.fst_limit_cone,
+      PullbackCone.snd_limit_cone, prod₀, cone]
+      obtain ⟨w, h⟩ := h_all_pullbacks_in_precov
+      obtain ⟨left_1, right_1⟩ := h
+      simp_all only
+      rfl
+
+    let cone' := PullbackCone.mk cone.fst cone.snd hom_cone_fst_snd_comp
+    let fst' := cone'.fst
+    let snd' := cone'.snd
+
+    have iso_cones := CategoryTheory.Limits.PullbackCone.eta cone'
+
+    simp_all
     ext
+    unfold Obj.x
     constructor
     case x.h.mp x =>
       intro h
       exact h_y_subset₂ h
     case x.h.mpr x =>
-      intro h
+      intro h_in_ov_left
       unfold Obj.x at *
+      apply Set.mem_of_mem_of_subset
+      exact (hom_ov_left_x.down.down h_in_ov_left)
+      unfold Obj.x
+      rw [← y_def_eq_pullback]
       
       sorry
   sorry
