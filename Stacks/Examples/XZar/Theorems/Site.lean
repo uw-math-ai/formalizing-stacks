@@ -8,6 +8,7 @@ import Mathlib.Data.Set.Lattice.Image
 import Mathlib.Data.Set.Image
 import Mathlib.Data.Set.Defs
 import Mathlib.CategoryTheory.Comma.Over.Pullback
+import Mathlib.Topology.Basic
 import Stacks.Site
 import Stacks.Examples.XZar.XZarCat
 import Stacks.Examples.XZar.Theorems.Pullbacks
@@ -270,30 +271,86 @@ def pullback.{u} {C : Type u} {Cat : XZarCat.{u}} {X : @Obj.{u} C Cat}
         exact X_to_pullback.down.down
 
       apply Set.mem_singleton_iff.mpr
-      apply_fun (·.x)
-      case _ =>
-        change (Limits.pullback i.hom ov.hom).x = ov.left.x
-        apply Set.eq_of_subset_of_subset
-        case a =>
-          exact hom_pullback_ov_left.down.down
-        case a =>
-          unfold Obj.x
+      ext
+      case x.h x =>
+        constructor
+        case mp =>
+          intro h_in
           unfold Obj.x at *
+          apply Set.mem_of_mem_of_subset
+          exact h_in
+          exact hom_pullback_ov_left.down.down
+        case mpr =>
+          intro h_in
+          unfold Obj.x at *
+          apply Set.mem_of_mem_of_subset
           -- ov ⊆ E
           -- and Y ⊆ E
           -- so E ⊆ ov ∩ Y
           -- ov ∩ Y is the binary product we have defined
           -- and the binary product has projections to ov and Y
           -- this suffices
+          exact h_in
           change ov.left.x ⊆ (Limits.pullback i.hom ov.hom).x
           apply PLift.down
           apply ULift.down
           change ov.left ⟶ Limits.pullback i.hom ov.hom
           simp_all
           apply CategoryTheory.Limits.pullback.lift (by apply CategoryStruct.comp; exact f; exact i_hom_iso.inv) (CategoryStruct.id ov.left)
-      simp [Function.Injective]
-      sorry
-    sorry
+    intro h
+    simp
+    have h_precov' : X ∈ (⋃ ov ∈ precov, {ov.left}) := by
+      simp_all
+    have ⟨witness, dom, ⟨left, h_X_in_dom⟩⟩ := Set.mem_iUnion.mp h_precov'
+    have ⟨witness_in_precov, x_is_dom⟩ := left
+    exact ⟨witness, witness_in_precov, by
+      let prod := Prod.mk' witness.left ov.left
+      let pb   := Limits.pullback witness.hom ov.hom
+
+      let p₁   := Limits.pullback.fst witness.hom ov.hom
+      let p₂   := Limits.pullback.snd witness.hom ov.hom
+
+      have pullback_to_prod : pb ⟶ prod.P := ⟨⟨by
+        change pb.x ⊆ prod.P.x
+        rw [Prod.p_hom_def_eq]
+        unfold Obj.x
+        apply Set.subset_inter_iff.mpr
+        constructor
+        exact p₁.down.down
+        exact p₂.down.down⟩⟩
+      have prod_to_pullback : prod.P ⟶ pb := CategoryTheory.Limits.pullback.lift ⟨⟨prod.π₁⟩⟩ ⟨⟨prod.π₂⟩⟩
+
+      let h_witness_eq : witness.left = X := by
+        simp_all
+
+      simp_all
+      ext
+      case x.h x =>
+        constructor
+        case mp =>
+          intro h
+          unfold Obj.x at *
+          apply Set.mem_of_mem_of_subset
+          case hx =>
+            exact h
+          change ov.left.x ⊆ (Limits.pullback witness.hom ov.hom).x
+          have p₁ := Limits.pullback.fst witness.hom ov.hom
+          have p₂ := Limits.pullback.snd witness.hom ov.hom
+          apply PLift.down
+          apply ULift.down
+          change ov.left ⟶ Limits.pullback witness.hom ov.hom
+          simp_all
+          apply CategoryTheory.Limits.pullback.lift
+            (by apply CategoryStruct.comp; exact ov.hom; simp [h_witness_eq]; exact ⟨⟨Set.Subset.rfl⟩⟩)
+            (CategoryStruct.id ov.left)
+        case mpr =>
+          intro h
+          unfold Obj.x at *
+          apply Set.mem_of_mem_of_subset
+          exact h
+          change (Limits.pullback witness.hom ov.hom).x ⊆ ov.left.x
+          exact p₂.down.down
+        ⟩
 
 instance instSiteXZar.{u} {C : Type u} {Cat : XZarCat.{u}} :
   @Site Obj (instCategoryXZar.{u} Cat) (@instHasPullbacksXZar.{u} C Cat) :=
