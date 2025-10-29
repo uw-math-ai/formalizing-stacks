@@ -182,16 +182,8 @@ def trans.{u} {C : Type u} {Cat : XZarCat.{u}} {X : @Obj.{u} C Cat}
 def pullback.{u} {C : Type u} {Cat : XZarCat.{u}} {X : @Obj.{u} C Cat}
   (ov : Over X) (precov : Precover X) (h_precov : precov ∈ coverings X)
   : {x | ∃ g ∈ precov, Over.mk (pullback.snd g.hom ov.hom) = x} ∈ coverings ov.left := by
-  simp only [coverings] at *
-  change ⋃ ov ∈ precov, {left | left = ov.left} = {X} at h_precov
-  -- We have defined the binary product as the intersection
-  -- We don't know anything about ov.left
-  -- but in the pullback ⋃ f ∈ precov, pullback y.hom ov.hom,
-  -- y.left = x,
-  -- because h : ⋃ ov ∈ precov, {ov.left} = {x}
-  -- so, the pullback in ⋃ f ∈ precov, pullback y.hom ov.hom
+  simp_all
   have h_all_precov_left_x : ∀ ov ∈ precov, ov.left = X := fun ov h_in_precov => by
-    simp_all
     have h' : ov.left ∈ (⋃ ov ∈ precov, {ov.left}) := by
       apply Set.mem_iUnion.mpr
       use ov
@@ -199,175 +191,109 @@ def pullback.{u} {C : Type u} {Cat : XZarCat.{u}} {X : @Obj.{u} C Cat}
       exact h_in_precov
     rw [h_precov] at h'
     exact Set.eq_of_mem_singleton h'
-  simp
-  -- Since y ∈ precov, then y.left = X
+
+  have h_all_left_x_precov : ∀ (precov' : Precover X), ((⋃ ov ∈ precov', {ov.left}) = {X}) → precov' ∈ coverings X := by
+    simp_all
+
   ext
-  constructor
-  case h.mp Y =>
-    intro h_all_pullbacks_in_precov
-    simp at h_all_pullbacks_in_precov
-    have ⟨i, h_i_precov, y_def_eq_pullback⟩ := h_all_pullbacks_in_precov
-    -- Since i is in precov, then its left is X
-    -- therefore, it is the identity map?
-    -- We can probably construct an "equivalent" over
-    -- from ov.hom
-    -- or we can use apply_fun and show they are equivalent?
-    have h_i_left : i.left = X := h_all_precov_left_x i h_i_precov
-
-    -- We can probably use trans or iso here
-    -- since i is an Over X with left = X
-    -- we just need to make an inverse, which is pretty easy
-    let i_hom : i.left ⟶ X := i.hom
-    let i_hom_inv : X ⟶ i.left := by
-      rw [h_i_left]
-      exact CategoryStruct.id X
-    let i_hom_iso := Iso.mk i_hom i_hom_inv
-
-    -- This seems like we should use the definition of our pullbacks
-    -- pullback point = the intersection of the sets i.left and ov.left
-    -- we can get the cone
-    let cone := pullback.cone i.hom ov.hom
-
-    let left  : cone.pt ⟶ i.left  := cone.fst
-    let right : cone.pt ⟶ ov.left := cone.snd
-
-    let pullback_left  := pullback.fst i.hom ov.hom
-    let pullback_right := pullback.snd i.hom ov.hom
-
-    simp at pullback_left
-    simp at pullback_right
-
-    rw [← y_def_eq_pullback] at pullback_left
-    rw [← y_def_eq_pullback] at pullback_right
-
-    have h_y_subset₁ : Y.x ⊆ i.left.x  := pullback_left.down.down
-    have h_y_subset₂ : Y.x ⊆ ov.left.x := pullback_right.down.down
-
-    have h_iso_cone := CategoryTheory.Limits.PullbackCone.eta cone
-
-    -- We can also derive a product
-
-    let prod₀ := prod i.left ov.left
-
-    let π₁ : prod₀ ⟶ i.left  := prod.fst
-    let π₂ : prod₀ ⟶ ov.left := prod.snd
-
-    -- And we can induce a morphism from cone.pt to prod.pt
-    have cone_pt_prod : cone.pt ⟶ prod₀ := Limits.prod.lift left right
-
-    have prod_subset_i  : prod₀.x ⊆ i.left.x  := π₁.down.down
-    have prod_subset_ov : prod₀.x ⊆ ov.left.x := π₂.down.down
-
-    have cone_subset_i   : cone.pt.x ⊆ i.left.x  := left.down.down
-    have cone_subset_ov  : cone.pt.x ⊆ ov.left.x := right.down.down
-
-    have cone_subset_prod : cone.pt.x ⊆ prod₀.x  := cone_pt_prod.down.down
-
-    -- and the product gives us the intersection
-
-    -- We jut need to show that prod.P = i.left × ov.left
-    -- we can probably do this with a few morphisms
-    unfold Obj.x at *
-
-    let prod' := Prod.mk' i.left ov.left
-
-    have h : prod₀.x ⊆ i.left.x ∩ ov.left.x := by
-      apply Set.subset_inter_iff.mpr
-      constructor
-      repeat assumption
-
-    have hom_prod₀_prod' : prod₀ ⟶ prod'.P := ⟨⟨by
-      unfold Hom
-      rw [Prod.p_hom_def_eq]
-      exact h⟩⟩
-
-    -- Y is a subset of i.left and ov.left
-    -- so Y is the intersection of i.left and ov.left
-
-    have h_y_inter : Y.x ⊆ i.left.x ∩ ov.left.x := by
-      apply Set.subset_inter_iff.mpr
-      constructor
-      repeat assumption
-
-    -- So Y ⟶ Prod
-    have hom_y_prod : Y ⟶ prod'.P := ⟨⟨h_y_inter⟩⟩
-
-    -- prod is a subset of ov.left
-    -- and  Y
-    unfold Obj.x at *
-
-    -- prod₀ is a subset of ov.left
-    -- and cone.pt is a subset of prod₀
-    -- and prod₀ is the intersection
-    -- so ov.left is in the intersection
-    -- that is, it's in Y
-    -- cone.pt is a subset of ov.left
-    -- so if something is in ov.left
-    -- it is in cone.pt
-    -- furthermore, h_eta_cone tells us
-    -- we can make a hom either way from cone to pullbackcone.mk
-
-    -- Since we have a hom from prod₀ to prod'.P, prod₀ must be a subset of ov.left ∩ i.left
-
-    -- We should be able to retrieve the things ov.left and i.left go to from the cone
-    -- i.hom and ov.hom are f and g
-    let f := i.hom
-    let g := ov.hom
-    simp at f
-    simp at g
-
-    have hom_i_left_x : i.left ⟶ X := i_hom
-    have hom_ov_left_x : ov.left ⟶ X := ov.hom
-
-    have hom_cone_fst_snd_comp : cone.fst ≫ f = cone.snd ≫ g := by
-      simp_all
-      subst y_def_eq_pullback
-      simp_all only [Functor.id_obj,
-      Functor.const_obj_obj, limit.cone_x, PullbackCone.fst_limit_cone,
-      PullbackCone.snd_limit_cone, prod₀, cone]
-      obtain ⟨w, h⟩ := h_all_pullbacks_in_precov
-      obtain ⟨left_1, right_1⟩ := h
-      simp_all only
-      rfl
-
-    let cone' := PullbackCone.mk cone.fst cone.snd hom_cone_fst_snd_comp
-    let fst' := cone'.fst
-    let snd' := cone'.snd
-
-    have iso_cones := CategoryTheory.Limits.PullbackCone.eta cone'
-
-    have h₁ : i.left.x ∩ ov.left.x ⊆ X.x := by
-      simp_all
-
-    have h₃ : X.x ∩ ov.left.x ⊆ X.x := by
-      simp_all
-
-    have h₂ : Y.x ⊆ i.left.x ∩ ov.left.x := h_y_inter
-
-    have h₄ : Y.x ⊆ X.x := by
-      simp_all
-
-    have h₅ : prod'.P.x = i.left.x ∩ ov.left.x := by
-      unfold Obj.x
-      change prod'.P.x = i.left.x ∩ ov.left.x
-      rw [Prod.p_hom_def_eq]
-
-    have trans := Set.Subset.trans h₂ h₁
-
-    ext
-    unfold Obj.x
+  case h E =>
     constructor
-    case x.h.mp x =>
-      intro h
-      exact h_y_subset₂ h
-    case x.h.mpr x =>
-      intro h_in_ov_left
-      unfold Obj.x at *
-      apply Set.mem_of_mem_of_subset
-      
-      
+    case mp =>
+      intro E_in_precov
+      simp at E_in_precov
+      have ⟨i, h_i_in_precov, E_def_eq⟩ := E_in_precov
+      rw [E_def_eq]
+
+      -- The limit has projections to i and ov
+      -- and since i has left = X,
+      -- then i is in the coverings
+      -- furthermore, since ov ⟶ X
+      -- and X ⟶ I
+      -- and I ⟶ X
+      -- then {ov} ∈ coverings
+      -- by the trans property
+
+      have hom_pullback_ov_left : Limits.pullback i.hom ov.hom ⟶ ov.left :=
+        pullback.snd i.hom ov.hom
+      have hom_pullback_i_left  : Limits.pullback i.hom ov.hom ⟶ i.left  :=
+        pullback.fst i.hom ov.hom
+
+      let f : ov.left ⟶ X := ov.hom
+      let g : i.left ⟶ X := i.hom
+
+      -- since i ∈ precov, then i.left = X
+      -- and since i : Over X
+      -- then i.hom is an isomorphism X
+      have i_left_X : i.left = X := h_all_precov_left_x _ h_i_in_precov
+      have i_hom_iso : Iso i.left X := by
+        rw [i_left_X]
+
+      let prod := Prod.mk' i.left ov.left
+
+      have h_pullback_inter : (Limits.pullback i.hom ov.hom) ⟶ prod.P := by
+        apply ULift.up
+        apply PLift.up
+        change (Limits.pullback i.hom ov.hom).x ⊆ prod.P.x
+        rw [Prod.p_hom_def_eq]
+        apply Set.subset_inter
+        exact hom_pullback_i_left.down.down
+        exact hom_pullback_ov_left.down.down
+
+      have hom_over := (Over.mk i.hom).hom
+      simp at hom_over
+
+      have h_X_inter : ov.left.x ∩ i.left.x ⊆ X.x := by
+        unfold Obj.x
+        subst E_def_eq
+        simp_all only [Functor.id_obj,
+          Functor.const_obj_obj,
+          Set.subset_inter_iff,
+          Set.inter_subset_right]
+
+      have h_prod_ov_left  : prod.P ⟶ ov.left := ⟨⟨prod.π₂⟩⟩
+      have h_prod_i_left   : prod.P ⟶ i.left  := ⟨⟨prod.π₁⟩⟩
+
+      have h_prod_is_inter : prod.P.x = i.left.x ∩ ov.left.x := by
+        rw [Prod.p_hom_def_eq]
+
+      let ov_pullback := Over.mk i.hom
+
+      -- the product has a morphism to the pullback
+      have X_to_pullback : prod.P ⟶ Limits.pullback i.hom ov.hom := CategoryTheory.Limits.pullback.lift h_prod_i_left h_prod_ov_left
+
+      have pullback_eq_inter : (Limits.pullback i.hom ov.hom).x = i.left.x ∩ ov.left.x := by
+        apply Set.eq_of_subset_of_subset
+        unfold Obj.x
+        change (Limits.pullback i.hom ov.hom).x ⊆ (i.left.x ∩ ov.left.x)
+        rw [← h_prod_is_inter]
+        exact h_pullback_inter.down.down
+        exact X_to_pullback.down.down
+
+      apply Set.mem_singleton_iff.mpr
+      apply_fun (·.x)
+      case _ =>
+        change (Limits.pullback i.hom ov.hom).x = ov.left.x
+        apply Set.eq_of_subset_of_subset
+        case a =>
+          exact hom_pullback_ov_left.down.down
+        case a =>
+          unfold Obj.x
+          unfold Obj.x at *
+          -- ov ⊆ E
+          -- and Y ⊆ E
+          -- so E ⊆ ov ∩ Y
+          -- ov ∩ Y is the binary product we have defined
+          -- and the binary product has projections to ov and Y
+          -- this suffices
+          change ov.left.x ⊆ (Limits.pullback i.hom ov.hom).x
+          apply PLift.down
+          apply ULift.down
+          change ov.left ⟶ Limits.pullback i.hom ov.hom
+          simp_all
+          apply CategoryTheory.Limits.pullback.lift (by apply CategoryStruct.comp; exact f; exact i_hom_iso.inv) (CategoryStruct.id ov.left)
+      simp [Function.Injective]
       sorry
-  sorry
+    sorry
 
 instance instSiteXZar.{u} {C : Type u} {Cat : XZarCat.{u}} :
   @Site Obj (instCategoryXZar.{u} Cat) (@instHasPullbacksXZar.{u} C Cat) :=
