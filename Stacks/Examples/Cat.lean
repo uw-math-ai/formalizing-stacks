@@ -56,8 +56,8 @@ def iso {X Y : Cat} (hom : Y ⟶ X) (h_is_iso : IsIso hom) : {Over.mk hom} ∈ c
 
   let iso_under : Equivalence Y X := Cat.equivOfIso (asIso hom)
 
-  have h_equiv_F     : iso_under.functor = F := rfl
-  have h_equiv_F_inv : iso_under.inverse = F_inv := rfl
+  let h_equiv_F     : iso_under.functor = F     := rfl
+  let h_equiv_F_inv : iso_under.inverse = F_inv := rfl
 
   change FullyFaithful (Functor.ofCatHom hom)
 
@@ -90,7 +90,25 @@ def iso {X Y : Cat} (hom : Y ⟶ X) (h_is_iso : IsIso hom) : {Over.mk hom} ∈ c
       apply CategoryStruct.comp iso_X_B_id.inv
       exact CategoryStruct.id B
 
-    map_preimage := sorry
+    map_preimage {A B} hom := by
+      let comp_eq_id := iso_under.functor_unitIso_comp A
+      dsimp at comp_eq_id
+
+      simp
+      let h : F_inv.obj (F.obj A) ⟶ F_inv.obj (F.obj B) :=
+        obj_inv.map hom
+
+
+      change (F.map (iso_under.unitIso.hom.app A)
+        ≫ F.map (F_inv.map hom) ≫ (F).map (iso_under.unitIso.inv.app B) = hom)
+
+      change (iso_under.functor.map (iso_under.unitIso.hom.app A)
+        ≫ iso_under.functor.map (iso_under.inverse.map hom)
+          ≫ (F).map (iso_under.unitIso.inv.app B) = hom)
+
+      
+
+      sorry
     preimage_map := sorry
   }
 
