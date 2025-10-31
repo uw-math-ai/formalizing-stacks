@@ -15,7 +15,8 @@ open CategoryTheory.Limits
 open CategoryTheory.Functor
 
 /-
-Cat forms a site, where bijections between morphisms (adjunct functors between categories)
+Cat forms a site, where bijections between morphisms. Specifically the
+  functors given by the morphisms are fully faithful.
   satisfy the "iso" property.
 Since Cat also has limits of every shape, it should also have pullbacks?
   Thereby satisfying the "pullback" property.
