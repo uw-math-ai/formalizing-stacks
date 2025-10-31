@@ -115,9 +115,6 @@ def iso {X Y : Cat} (hom : Y ⟶ X) (h_is_iso : IsIso hom) : {Over.mk hom} ∈ c
 
       simp at h_comp_id
 
-      --rw [hom_eq_comp_id]
-      --rw [← h_comp_id]
-
       conv =>
         left
         rw [← Category.assoc]
@@ -131,11 +128,11 @@ def iso {X Y : Cat} (hom : Y ⟶ X) (h_is_iso : IsIso hom) : {Over.mk hom} ∈ c
       conv =>
         left
         right
-        change iso_under.counitInv.app(iso_under.functor.obj B) ≫
+        change iso_under.counitInv.app (iso_under.functor.obj B) ≫
           iso_under.functor.map (iso_under.unitIso.inv.app B)
         simp
         rfl
-      sorry
+      exact Category.comp_id hom
     preimage_map := sorry
   }
 
