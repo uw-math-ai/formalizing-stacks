@@ -136,7 +136,7 @@ instance instSiteCat : @Site Cat _ instPullbacksCat where
     simp_all
 
     let precov'  := (h_mk_cov f f_in_cov₀).val
-    let property : ∀ ov ∈ precov', IsIso ov.hom := (h_mk_cov f f_in_cov₀).property
+    let property : ∀ ov ∈ precov',  ∃ _h : FullyFaithful (Functor.ofCatHom ov.hom), true := (h_mk_cov f f_in_cov₀).property
 
     have f_iso : IsIso f.hom := is_covering f f_in_cov₀
     have g_iso : IsIso g.hom := property g g_in_precov'
