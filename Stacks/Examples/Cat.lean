@@ -34,25 +34,23 @@ instance instPullbacksCat : @HasPullbacks.{0, 1} Cat.{0, 0} instCategoryCat.{0, 
   unfold HasPullbacks
   exact h
 
-@[simp]
 def coverings (X : Cat) : Set (Precover X) := {
   cov |
-    ∀ ov ∈ cov, ∃ _h : FullyFaithful (Functor.ofCatHom ov.hom), true
+    ∀ ov ∈ cov, ∃ _h : FullyFaithful ov.hom, true
   }
 
-@[simp]
 def iso {X Y : Cat} (hom : Y ⟶ X) (h_is_iso : IsIso hom) : {Over.mk hom} ∈ coverings X := by
   -- Since Y ⟶ X is a functor between Y and X
   -- and Y ⟶ X is isomorphic,
   -- then there is an equivalence between Y and X
-  let F     := Functor.ofCatHom hom
-  let F_inv := (Functor.ofCatHom <| inv hom)
+  let F     := hom
+  let F_inv := inv hom
 
   let obj     := F.obj
   let obj_inv := F_inv
 
   unfold coverings
-  simp
+  simp [Set.mem_singleton_iff]
   apply Nonempty.intro
 
   let iso_under : Equivalence Y X := Cat.equivOfIso (asIso hom)
@@ -60,7 +58,7 @@ def iso {X Y : Cat} (hom : Y ⟶ X) (h_is_iso : IsIso hom) : {Over.mk hom} ∈ c
   let h_equiv_F     : iso_under.functor = F     := rfl
   let h_equiv_F_inv : iso_under.inverse = F_inv := rfl
 
-  change FullyFaithful (Functor.ofCatHom hom)
+  change FullyFaithful hom
 
   -- The equivalence says Functor.comp F F_inv
   -- is isomorphic to the identity
@@ -82,9 +80,6 @@ def iso {X Y : Cat} (hom : Y ⟶ X) (h_is_iso : IsIso hom) : {Over.mk hom} ∈ c
 
       rw [h_equiv_F, h_equiv_F_inv] at iso_X_A_id
       rw [h_equiv_F, h_equiv_F_inv] at iso_X_B_id
-
-      simp at iso_X_A_id
-      simp at iso_X_B_id
 
       apply CategoryStruct.comp iso_X_A_id.hom
       apply CategoryStruct.comp h
@@ -113,7 +108,7 @@ def iso {X Y : Cat} (hom : Y ⟶ X) (h_is_iso : IsIso hom) : {Over.mk hom} ∈ c
         rfl
       exact Category.comp_id hom
     preimage_map {A B} hom := by
-      simp
+      dsimp
 
       conv =>
         left
@@ -126,60 +121,59 @@ def iso {X Y : Cat} (hom : Y ⟶ X) (h_is_iso : IsIso hom) : {Over.mk hom} ∈ c
       simp
   }
 
+def comp {X : Cat} (cov₀ : Precover X) (is_covering : cov₀ ∈ coverings X)
+  (h_mk_cov : (f : Over X) → f ∈ cov₀ → { cover // cover ∈ coverings f.left}) :
+  { Over.mk (g.hom ≫ f.hom) |
+    (f : Over X) (hf : f ∈ cov₀) (g ∈ (h_mk_cov f hf).val) } ∈ coverings X := fun ov h_ov => by
+  have ⟨f, ⟨f_in_cov₀, ⟨g, ⟨g_in_precov', h_ov_eq⟩⟩⟩⟩ := h_ov
+
+  let precov'  := (h_mk_cov f f_in_cov₀).val
+  let property : ∀ ov ∈ precov',  ∃ _h : FullyFaithful ov.hom, true :=
+    (h_mk_cov f f_in_cov₀).property
+
+  have ⟨f_faithful, _⟩ := is_covering f f_in_cov₀
+  have ⟨g_faithful, _⟩ := property g g_in_precov'
+
+  have h_g_in_precov' : g ∈ precov' := by
+    change (h_mk_cov f f_in_cov₀).val g
+    exact g_in_precov'
+
+  have over_comp_in_coverings : {Over.mk (g.hom ≫ f.hom)} ∈ coverings X := by
+    unfold coverings
+    simp [exists_const_iff]
+    apply Nonempty.intro
+    apply CategoryTheory.Functor.FullyFaithful.comp
+    repeat assumption
+
+  rw [← h_ov_eq, Over.mk_hom]
+
+  unfold coverings at over_comp_in_coverings
+  simp at over_comp_in_coverings
+
+  rw [exists_const]
+
 instance instSiteCat : @Site Cat _ instPullbacksCat where
   -- In the coverings if the functor is bijective
   coverings := coverings
   iso := iso
-  trans {X} cov₀ is_covering h_mk_cov := fun ov h_ov => by
-    simp at h_ov
-    have ⟨f, ⟨f_in_cov₀, ⟨g, ⟨g_in_precov', h_ov_eq⟩⟩⟩⟩ := h_ov
-    simp_all
-
-    let precov'  := (h_mk_cov f f_in_cov₀).val
-    let property : ∀ ov ∈ precov',  ∃ _h : FullyFaithful (Functor.ofCatHom ov.hom), true := (h_mk_cov f f_in_cov₀).property
-
-    have f_iso : IsIso f.hom := is_covering f f_in_cov₀
-    have g_iso : IsIso g.hom := property g g_in_precov'
-
-    have h_g_in_precov' : g ∈ precov' := by
-      change (h_mk_cov f f_in_cov₀).val g
-      exact g_in_precov'
-
-    have over_comp_in_coverings : {Over.mk (g.hom ≫ f.hom)} ∈ coverings X := by
-      simp
-      apply CategoryTheory.IsIso.comp_isIso
-
-    rw [← h_ov_eq]
-    rw [Over.mk_hom]
-
-    unfold coverings at over_comp_in_coverings
-    simp at over_comp_in_coverings
-
-    exact over_comp_in_coverings
+  trans := comp
   pullback {X} ov precov precov_is_covering := by
-    simp
     intro a in_precov
-    simp at precov_is_covering
 
-    let h_a_iso : IsIso a.hom := precov_is_covering a in_precov
+    simp at in_precov
 
-    let fst : pullback a.hom ov.hom ⟶ a.left  := pullback.fst a.hom ov.hom
-    let snd : pullback a.hom ov.hom ⟶ ov.left := pullback.snd a.hom ov.hom
+    let ⟨g, h_in_precov, h_def_eq⟩ := in_precov
 
-    let left  : a.left  ⟶ X      := a.hom
+    have ⟨g_faithful, _⟩ := precov_is_covering g h_in_precov
+
+    let fst : pullback g.hom ov.hom ⟶ g.left  := pullback.fst g.hom ov.hom
+    let snd : pullback g.hom ov.hom ⟶ ov.left := pullback.snd g.hom ov.hom
+
+    let left  : g.left  ⟶ X      := g.hom
     let right : ov.left ⟶ X      := ov.hom
 
-    let ov_left_a  : ov.left ⟶ a.left  := ov.hom ≫ inv a.hom
-    let id_ov_left : ov.left ⟶ ov.left := CategoryStruct.id ov.left
-
-    let hom_a_pullback : ov.left ⟶ pullback a.hom ov.hom := pullback.lift ov_left_a id_ov_left
-
-    constructor
-    use hom_a_pullback
-    constructor
-    apply CategoryTheory.Limits.pullback.hom_ext
     simp
-    
+
     sorry
 
 
