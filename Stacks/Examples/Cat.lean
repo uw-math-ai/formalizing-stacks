@@ -94,27 +94,6 @@ def iso {X Y : Cat} (hom : Y ⟶ X) (h_is_iso : IsIso hom) : {Over.mk hom} ∈ c
     map_preimage {A B} hom := by
       simp
 
-      let h : F_inv.obj (F.obj A) ⟶ F_inv.obj (F.obj B) :=
-        obj_inv.map hom
-
-      have iso_X_B_id : (B ≅ (F ⋙ F_inv).obj B) :=
-        iso_under.unitIso.app B
-
-      change (F.map (iso_under.unitIso.hom.app A)
-        ≫ F.map (F_inv.map hom) ≫ F.map (iso_under.unitIso.inv.app B) = hom)
-
-      simp_all
---
-      let h_comp_id :
-        (F.map (iso_under.unitIso.hom.app A)
-          ≫ iso_under.counitIso.hom.app (F.obj A)
-        = 𝟙 (F.obj A)) := iso_under.functor_unitIso_comp A
-
-      let hom_eq_comp_id : hom = (𝟙 (F.obj A)) ≫ hom := by
-        simp_all only [Category.id_comp, F]
-
-      simp at h_comp_id
-
       conv =>
         left
         rw [← Category.assoc]
@@ -133,7 +112,18 @@ def iso {X Y : Cat} (hom : Y ⟶ X) (h_is_iso : IsIso hom) : {Over.mk hom} ∈ c
         simp
         rfl
       exact Category.comp_id hom
-    preimage_map := sorry
+    preimage_map {A B} hom := by
+      simp
+
+      conv =>
+        left
+        rw [← Category.assoc]
+        left
+        change _ ≫ iso_under.inverse.map (iso_under.functor.map hom)
+        rw [CategoryTheory.Equivalence.unit_naturality]
+        rfl
+
+      simp
   }
 
 instance instSiteCat : @Site Cat _ instPullbacksCat where
