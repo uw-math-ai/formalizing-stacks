@@ -152,28 +152,63 @@ def comp {X : Cat} (cov₀ : Precover X) (is_covering : cov₀ ∈ coverings X)
 
   rw [exists_const]
 
+def pb {X : Cat} (ov : Over X) (precov : Precover X) (precov_is_covering : precov ∈ coverings X) :
+  { Over.mk (pullback.snd g.hom ov.hom) | g ∈ precov } ∈ coverings ov.left := by
+  intro a in_precov
+  simp at in_precov
+
+  let ⟨g, h_in_precov, h_def_eq⟩ := in_precov
+  have ⟨g_faithful, _⟩ := precov_is_covering g h_in_precov
+
+  let fst : pullback g.hom ov.hom ⟶ g.left  := pullback.fst g.hom ov.hom
+  let snd : pullback g.hom ov.hom ⟶ ov.left := pullback.snd g.hom ov.hom
+
+  let left  : g.left  ⟶ X      := g.hom
+  let right : ov.left ⟶ X      := ov.hom
+
+  let left_F  := Functor.ofCatHom left
+  let right_F := Functor.ofCatHom right
+
+  -- g.hom is fully faithful, so it has an inverse
+  -- that is, there is a direct equivalence between
+  -- the moprhisms in the image
+  -- and those in the preimage
+  -- We cannot create a functor from X to g.left
+  -- because we don't have a mapping between
+  -- objects.
+  -- furthermore, we don't have a morphism from X to g.left
+  -- However, we have a morphism from the pullback to ov.left
+  -- which means we have a morphism from the pullback to X
+  -- so therefore, that morphism is fully faithful
+  -- hopefully.
+
+  -- Our goal is Nonempty (FullyFaithful (pullback.snd g.hom ov.hom))
+  -- pullback.snd : pullback ⟶ ov.left
+  -- so we have to show taht every morphism in ov.left
+  -- has an equivalent moprhism in pullback
+  -- Nice theorem: CategoryTheory.Functor.FullyFaithful.over
+  -- Since g is fully faithful,
+  -- then the functor from g (Over X) to X is fully faithful
+
+  simp
+  rw [← h_def_eq]
+  rw [Over.mk_hom]
+
+  apply Nonempty.intro
+
+  -- FullyFaithful has a nice theorem
+  -- FullyFaithful.map_inj
+  -- if g.map hom₁ = g.map hom₂
+  -- then hom₁ = hom₂
+  -- 
+
+  sorry
+
 instance instSiteCat : @Site Cat _ instPullbacksCat where
   -- In the coverings if the functor is bijective
   coverings := coverings
   iso := iso
   trans := comp
-  pullback {X} ov precov precov_is_covering := by
-    intro a in_precov
-
-    simp at in_precov
-
-    let ⟨g, h_in_precov, h_def_eq⟩ := in_precov
-
-    have ⟨g_faithful, _⟩ := precov_is_covering g h_in_precov
-
-    let fst : pullback g.hom ov.hom ⟶ g.left  := pullback.fst g.hom ov.hom
-    let snd : pullback g.hom ov.hom ⟶ ov.left := pullback.snd g.hom ov.hom
-
-    let left  : g.left  ⟶ X      := g.hom
-    let right : ov.left ⟶ X      := ov.hom
-
-    simp
-
-    sorry
+  pullback := pb
 
 
