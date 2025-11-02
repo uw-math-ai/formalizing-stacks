@@ -117,6 +117,76 @@ def pb {X : Cat} (ov : Over X) (precov : Precover X) (precov_is_covering : preco
 
   -- Note that limits.pullbackSymmetry
   -- gives us some kind of equivalnece
+  -- between fst and snd
+  -- so we can kind of "swap" fst and snd
+  -- so by proving that snd (going to g.left)
+  -- is fully faithful,
+  -- then we have done it for fst
+
+  -- we can make another pullbback whose points are P and G
+  -- and the pullback is X
+  have pullback' := pullback g.hom (fst ≫ g.hom)
+  have fst' := pullback.fst g.hom (fst ≫ g.hom)
+  have snd' := pullback.snd g.hom (fst ≫ g.hom)
+
+  simp at fst'
+  simp at snd'
+
+  have pullback_direction_iso : pullback g.hom ov.hom ≅ pullback ov.hom g.hom :=
+    pullbackSymmetry left right
+
+  -- since the two pullbacks are isomorphic
+  -- then it suffices to prove pullbback.fst is fully faithful
+  -- we can probably do this with .ofCompFaithful
+  -- but then we still need to show there is a preimage in P
+  -- given X
+
+  -- It seems like we will have to use our comp
+  -- constructor to do some assistance here
+  -- we can show that the Over.mk is in the coverings
+  -- and therefore that the composition of fst and left
+  -- is fully faithful
+
+  let mk_comp_precov : (ov : Over X) → ov ∈ precov → { cover // cover ∈ coverings ov.left } := fun ov h_in_cov => by
+    unfold coverings
+    simp
+    unfold coverings at precov_is_covering
+    simp at precov_is_covering
+    have h := precov_is_covering ov h_in_cov
+    exact {
+      val := {Over.mk (CategoryStruct.id ov.left)},
+      property := fun ov_left h => by
+        simp at h
+        apply Nonempty.intro
+        rw [h, Over.mk_hom]
+        exact FullyFaithful.id ov.left
+      }
+
+  have mk_comp_ov := comp precov precov_is_covering (fun ov h_in_cov =>
+    by
+      )
+
+  simp [coverings] at mk_comp_ov
+  have h := mk_comp_ov (Over.mk <| fst ≫ g.hom) g h_in_precov (Over.mk fst) (by
+    change Over.mk fst ∈ ({Over.mk (CategoryStruct.id g.left)} : Precover g.left)
+    sorry
+  )
+
+  simp at h
+
+  have h_full_snd : Full snd := {
+    map_surjective {x y} := by
+      -- x and y are points in the pullbabck
+      simp [Function.Surjective]
+      intro hom
+
+      -- we already have a functor from pullback to g
+      -- so we can just use the functor's map
+      -- hopefully rfl will handle the rest
+      use sorry
+      
+      sorry
+  }
 
   exact {
     preimage {x y} hom_pre := by
