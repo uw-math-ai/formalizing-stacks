@@ -24,6 +24,8 @@ def pb {X : Cat} (ov : Over X) (precov : Precover X) (precov_is_covering : preco
   let ⟨g, h_in_precov, h_def_eq⟩ := in_precov
   have ⟨g_faithful, _⟩ := precov_is_covering g h_in_precov
 
+  simp
+
   let fst : pullback g.hom ov.hom ⟶ g.left  := pullback.fst g.hom ov.hom
   let snd : pullback g.hom ov.hom ⟶ ov.left := pullback.snd g.hom ov.hom
 
@@ -54,7 +56,6 @@ def pb {X : Cat} (ov : Over X) (precov : Precover X) (precov_is_covering : preco
   -- Since g is fully faithful,
   -- then the functor from g (Over X) to X is fully faithful
 
-  simp
   rw [← h_def_eq]
   rw [Over.mk_hom]
 
@@ -147,43 +148,21 @@ def pb {X : Cat} (ov : Over X) (precov : Precover X) (precov_is_covering : preco
   -- and therefore that the composition of fst and left
   -- is fully faithful
 
-  let mk_comp_precov : (ov : Over X) → ov ∈ precov → { cover // cover ∈ coverings ov.left } := fun ov h_in_cov => by
-    unfold coverings
-    simp
-    unfold coverings at precov_is_covering
-    simp at precov_is_covering
-    have h := precov_is_covering ov h_in_cov
-    exact {
-      val := {Over.mk (CategoryStruct.id ov.left)},
-      property := fun ov_left h => by
-        simp at h
-        apply Nonempty.intro
-        rw [h, Over.mk_hom]
-        exact FullyFaithful.id ov.left
-      }
-
-  have mk_comp_ov := comp precov precov_is_covering (fun ov h_in_cov =>
-    by
-      )
-
-  simp [coverings] at mk_comp_ov
-  have h := mk_comp_ov (Over.mk <| fst ≫ g.hom) g h_in_precov (Over.mk fst) (by
-    change Over.mk fst ∈ ({Over.mk (CategoryStruct.id g.left)} : Precover g.left)
-    sorry
-  )
-
-  simp at h
-
-  have h_full_snd : Full snd := {
+  have h_full_snd : Full fst := {
     map_surjective {x y} := by
       -- x and y are points in the pullbabck
       simp [Function.Surjective]
       intro hom
 
-      -- we already have a functor from pullback to g
-      -- so we can just use the functor's map
-      -- hopefully rfl will handle the rest
-      use sorry
+      -- hom is in ov.left
+      -- so we can now get a hom in X
+
+      let hom_x   := g.hom.map hom
+
+      -- since we have the preimage property
+      -- we can also get one in g
+      let hom_g := g_faithful.preimage hom_x
+
       
       sorry
   }
