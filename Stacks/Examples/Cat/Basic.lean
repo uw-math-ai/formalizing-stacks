@@ -59,7 +59,6 @@ def comp {X : Cat} (cov₀ : Precover X) (is_covering : cov₀ ∈ coverings X)
 
   let ⟨ov', in_val, ⟨ov_left, y_eq_ov_left⟩⟩ := property y
 
-
   use Over.mk (ov'.hom ≫ ov.hom)
   constructor
   case h.left =>
@@ -69,7 +68,8 @@ def comp {X : Cat} (cov₀ : Precover X) (is_covering : cov₀ ∈ coverings X)
   case h.right =>
     rw [Over.mk_hom]
     use ov_left
-    trans
-    exact CategoryTheory.Functor.comp_obj ov'.hom ov.hom ov_left
-    rw [y_eq_ov_left, h_surj]
+    exact Eq.trans (CategoryTheory.Functor.comp_obj ov'.hom ov.hom ov_left)
+      (by
+        rw [y_eq_ov_left, h_surj]
+      )
 
