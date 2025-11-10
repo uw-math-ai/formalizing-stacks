@@ -24,21 +24,4 @@ instance instSite.{u} {C : Type u} [TopologicalSpace C] :
       simp
     pullback f U h_precov_is_cov :=  Pretopology.pullbacks (Opens.pretopology C) f U h_precov_is_cov
 
-instance instSite₀.{u} {C : Type u} [TopologicalSpace C] : Site (Opens C) where
-  coverings X precov := ∀ ov ∈ precov, (Presieve.singleton ov.hom) ∈ coverings X
-  iso f h_iso ov in_precov := by
-    simp at in_precov
-    rw [in_precov, Over.mk_hom]
-    exact instSite.iso f h_iso
-  trans {X} precov precov_is_covering h := by
-    have h := @instSite.trans _ _ X
-      (fun Y => { hom | ∃ i ∈ precov, Y = i.left})
-      (by
-        change _ ∈ coverings X
-        
-        sorry
-      )
-    
-    sorry
-
 end Zar
