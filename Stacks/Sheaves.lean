@@ -10,9 +10,9 @@ open CategoryTheory.Presieve
 abbrev Presheaf.{u, v} (C : Type v) [Category.{u, v} C] :=
   Cᵒᵖ ⥤ (Type v)
 
-def Sheaf.{u, v} (C : Type v)
+def IsSheaf.{u, v} (C : Type v)
   [Category.{u, v} C] [HasPullbacks C] [h_site : Site'.{u, v} C]
-  (F : Presheaf.{u, v} C) := ∀ (U : C) (pre : Presieve U)
+  (F : Presheaf C) := ∀ (U : C) (pre : Presieve U)
     (_in_cov : pre ∈ h_site.coverings U)
     (fam : FamilyOfElements F pre)
     (_comp : fam.Compatible),
@@ -20,3 +20,4 @@ def Sheaf.{u, v} (C : Type v)
       ∀ (Ui : C)
       (hom : Ui ⟶ U)
       (in_cov : hom ∈ @pre Ui), fam hom in_cov = F.map (.op hom) s
+
