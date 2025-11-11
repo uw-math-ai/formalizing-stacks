@@ -1,7 +1,4 @@
-import Mathlib.CategoryTheory.Category.Basic
-import Mathlib.CategoryTheory.Comma.Over.Basic
-import Mathlib.CategoryTheory.Iso
-import Mathlib.CategoryTheory.Limits.Shapes.Pullback.CommSq
+import Mathlib
 
 open CategoryTheory
 open CategoryTheory.Limits
@@ -17,3 +14,29 @@ structure Site.{u, v} (C : Type v) [Category.{u, v} C] [HasPullbacks.{u, v} C] w
     { Over.mk (g.hom ≫ f.hom) | (f : Over X) (hf : f ∈ U) (g ∈ (V f hf).val) } ∈ coverings X
   pullback {X : C} (f : Over X) (U : Precover X) (hU : U ∈ coverings X) :
     { Over.mk (pullback.snd g.hom f.hom) | g ∈ U } ∈ coverings f.left
+
+namespace Site
+
+def toPretopology.{u, v} {C : Type v} [Category.{u, v} C] [HasPullbacks.{u, v} C] (S : Site C) : Pretopology C where
+  coverings X := ⋃ cov ∈ S.coverings X, (fun ov => Presieve.singleton ov.hom) '' cov
+  has_isos {X Y} f is_iso := by
+    simp
+    exact ⟨{Over.mk f}, S.iso f is_iso, by simp⟩
+  pullbacks X {Y} f precov precov_is_cov := by
+    simp_all
+    obtain ⟨i, ⟨is_cov, ⟨ov, in_cov, h_ov_eq⟩⟩⟩ := precov_is_cov
+    have h_pullbacks := S.pullback (Over.mk f) i is_cov
+    use {x | ∃ g ∈ i, Over.mk (pullback.snd g.hom f) = x}
+    constructor
+    exact h_pullbacks
+    simp
+    use ov
+    constructor
+    exact in_cov
+    rw [← CategoryTheory.Presieve.pullback_singleton, ← h_ov_eq]
+
+end Site
+
+instance equivOfPretopology.{u, v} {C : Type v} [Category.{u, v} C] [HasPullbacks.{u, v} C] : Site C ≃ Pretopology C where
+  toFun S := by
+    sorry

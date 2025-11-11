@@ -44,4 +44,10 @@ def toGrothendieck.{u, v} {C : Type v} [Category.{u, v} C] [HasPullbacks.{u, v} 
 theorem to_of_pretopology_eq.{u, v} {C : Type v} [Category.{u, v} C] [HasPullbacks.{u, v} C]
   (pre : Pretopology C) : to_pretopology (of_pretopology pre) = pre := rfl
 
+instance equivOfGrothendieck.{u, v} {C : Type v} [Category.{u, v} C] [HasPullbacks.{u, v} C] : Site' C ≃ GrothendieckTopology C where
+  toFun := toGrothendieck
+  invFun G := by
+    
+    sorry
+
 end Site'
