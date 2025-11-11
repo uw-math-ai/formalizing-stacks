@@ -5,7 +5,9 @@ open CategoryTheory
 open CategoryTheory.Limits
 open CategoryTheory.Presieve
 
-abbrev Presheaf.{u, v} (C : Type v) [Category.{u, v} C]:=
+-- A presheaf is usually a functor from the opposite category of C to Set.
+-- In Lean, we use Type v to denote Set.
+abbrev Presheaf.{u, v} (C : Type v) [Category.{u, v} C] :=
   Cᵒᵖ ⥤ (Type v)
 
 def Sheaf.{u, v} (C : Type v)

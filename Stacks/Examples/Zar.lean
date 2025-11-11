@@ -1,6 +1,6 @@
 import Mathlib
 import Stacks.Site2Mathlib
-import Stacks.Site
+import Stacks.Sheaves
 
 open TopologicalSpace
 open CategoryTheory
