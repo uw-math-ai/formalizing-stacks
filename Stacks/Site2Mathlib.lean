@@ -37,11 +37,8 @@ end Site'
 
 namespace GrothendieckTopology
 
-def of_site'.{u, v} {C : Type v} [h_cat : Category.{u, v} C] [HasPullbacks.{u, v} C] (s : Site' C) : GrothendieckTopology.{u, v} C where
-  sieves X := { sieve | sieve.arrows ∈ s.coverings X }
-  top_mem' X := by
-    simp
-    
-    sorry
+def of_site'.{u, v} {C : Type v} [h_cat : Category.{u, v} C] [HasPullbacks.{u, v} C]
+  (s : Site' C) : GrothendieckTopology.{u, v} C :=
+  s.to_pretopology.toGrothendieck
 
 end GrothendieckTopology
