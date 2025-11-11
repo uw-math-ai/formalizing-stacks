@@ -18,6 +18,6 @@ def IsSheaf.{u, v} (C : Type v)
     (_comp : fam.Compatible),
     ∃! s : (F.obj (.op U)),
       ∀ (Ui : C)
-      (hom : Ui ⟶ U)
-      (in_cov : hom ∈ @pre Ui), fam hom in_cov = F.map (.op hom) s
+      (f : Ui ⟶ U)
+      (in_cov : f ∈ @pre Ui), fam f in_cov = F.map (.op f) s
 

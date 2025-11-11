@@ -9,9 +9,19 @@ open CategoryTheory
 namespace Sch
 
 instance instSite : Site' Scheme :=
-  Site'.of_pretopology (Scheme.pretopology (fun {_X _Y} f => IsImmersion f))
+  Site'.of_pretopology Scheme.zariskiPretopology
 
-theorem sheaf.{u} (S : Scheme.{u}) : IsSheaf.{u, u + 1} Scheme (uliftYoneda.obj.{u + 1} S) := by
+instance instSubcanonical : GrothendieckTopology.Subcanonical instSite.toGrothendieck := by
+  unfold instSite
+  unfold Site'.toGrothendieck
+  simp
+  rw [← Scheme.zariskiTopology_eq]
+  exact Scheme.subcanonical_zariskiTopology
+
+theorem sheaf.{u} : IsSheaf.{u, u + 1} Scheme (instSite.toGrothendieck.yoneda) := by
+  intro U pre pre_is_cov fam fam_compatible
+  -- The zariski topology is subcanonical
+  have h := Sheaf.isSheaf_yoneda_obj S
   
   sorry
 

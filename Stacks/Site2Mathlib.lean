@@ -37,6 +37,7 @@ def toGrothendieck.{u, v} {C : Type v} [h_cat : Category.{u, v} C] [HasPullbacks
   (s : Site' C) : GrothendieckTopology.{u, v} C :=
   s.to_pretopology.toGrothendieck
 
+@[simp]
 theorem of_to_pretopology_eq.{u, v} {C : Type v} [Category.{u, v} C] [HasPullbacks.{u, v} C]
   (pre : Pretopology C) : to_pretopology (of_pretopology pre) = pre := rfl
 
