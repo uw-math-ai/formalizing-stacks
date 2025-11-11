@@ -5,19 +5,12 @@ open CategoryTheory
 open CategoryTheory.Limits
 open CategoryTheory.Presieve
 
--- A presheaf is usually a functor from the opposite category of C to Set.
--- In Lean, we use Type v to denote Set.
-abbrev Presheaf.{u, v} (C : Type v) [Category.{u, v} C] :=
-  Cᵒᵖ ⥤ (Type v)
+abbrev Presheaf.{u₁, u₂, v₁, v₂} (C : Type v₁) (A : Type v₂)
+  [Category.{u₁, v₁} C] [Category.{u₂, v₂} A] :=
+  Cᵒᵖ ⥤ A
 
-def IsSheaf.{u, v} (C : Type v)
-  [Category.{u, v} C] [HasPullbacks C] [h_site : Site'.{u, v} C]
-  (F : Presheaf C) := ∀ (U : C) (pre : Presieve U)
-    (_in_cov : pre ∈ h_site.coverings U)
-    (fam : FamilyOfElements F pre)
-    (_comp : fam.Compatible),
-    ∃! s : (F.obj (.op U)),
-      ∀ (Ui : C)
-      (f : Ui ⟶ U)
-      (in_cov : f ∈ @pre Ui), fam f in_cov = F.map (.op f) s
-
+-- Sheaves adapted to our Sites
+def IsSheaf.{u₁, u₂, v₁, v₂} {C : Type v₁} {A : Type v₂}
+  [Category.{u₁, v₁} C] [Category.{u₂, v₂} A] [HasPullbacks C]
+  (s : Site' C)
+  (F : Presheaf.{u₁, u₂, v₁, v₂} C A) := Presheaf.IsSheaf s.toGrothendieck F
