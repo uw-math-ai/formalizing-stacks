@@ -33,12 +33,11 @@ def to_pretopology.{u, v} {C : Type v} [Category.{u, v} C] [HasPullbacks.{u, v} 
   transitive X U R is_cov h := @s.trans X U is_cov
     (fun Y f in_cov => { val := @R Y f in_cov, property := @h Y f in_cov })
 
-end Site'
-
-namespace GrothendieckTopology
-
-def of_site'.{u, v} {C : Type v} [h_cat : Category.{u, v} C] [HasPullbacks.{u, v} C]
+def toGrothendieck.{u, v} {C : Type v} [h_cat : Category.{u, v} C] [HasPullbacks.{u, v} C]
   (s : Site' C) : GrothendieckTopology.{u, v} C :=
   s.to_pretopology.toGrothendieck
 
-end GrothendieckTopology
+theorem of_to_pretopology_eq.{u, v} {C : Type v} [Category.{u, v} C] [HasPullbacks.{u, v} C]
+  (pre : Pretopology C) : to_pretopology (of_pretopology pre) = pre := rfl
+
+end Site'
