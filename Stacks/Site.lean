@@ -17,7 +17,8 @@ structure Site.{u, v} (C : Type v) [Category.{u, v} C] [HasPullbacks.{u, v} C] w
 
 namespace Site
 
-def toPretopology.{u, v} {C : Type v} [Category.{u, v} C] [HasPullbacks.{u, v} C] (S : Site C) : Pretopology C where
+def toPretopology.{u, v} {C : Type v} [Category.{u, v} C] [HasPullbacks.{u, v} C]
+  (S : Site C) : Pretopology C where
   coverings X := ⋃ cov ∈ S.coverings X, (fun ov => Presieve.singleton ov.hom) '' cov
   has_isos {X Y} f is_iso := by
     simp
@@ -28,12 +29,36 @@ def toPretopology.{u, v} {C : Type v} [Category.{u, v} C] [HasPullbacks.{u, v} C
     have h_pullbacks := S.pullback (Over.mk f) i is_cov
     use {x | ∃ g ∈ i, Over.mk (pullback.snd g.hom f) = x}
     constructor
-    exact h_pullbacks
+    case h.left =>
+      exact h_pullbacks
     simp
     use ov
     constructor
-    exact in_cov
+    case h.left =>
+      exact in_cov
     rw [← CategoryTheory.Presieve.pullback_singleton, ← h_ov_eq]
+  transitive {X} presieve presieve_Y is_cov mk_cov := by
+    simp_all
+    obtain ⟨i, is_cov, ov, ⟨ov_i, ov_eq⟩⟩ := is_cov
+    have ⟨precov, is_cov, ov', ov_in_precov', ov_eq'⟩ := mk_cov ov.hom (by rw [← ov_eq]; simp)
+    use i
+    constructor
+    assumption
+    use ov
+    constructor
+    exact ov_i
+    unfold Presieve.bind
+    funext
+    simp
+    constructor
+    intro h
+    constructor
+    constructor
+    use ov.hom
+    constructor
+    
+    
+    sorry
 
 end Site
 
