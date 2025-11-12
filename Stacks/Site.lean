@@ -51,28 +51,20 @@ def toPretopology.{u, v} {C : Type v} [Category.{u, v} C] [HasPullbacks.{u, v} C
       rfl
   transitive {X} presieve presieve_Y is_cov mk_cov := by
     simp_all
-    obtain ⟨i, is_cov, ov, ⟨ov_i, ov_eq⟩⟩ := is_cov
-    have h := S.trans i (by assumption) (fun ov' in_cov => by
-      have h := mk_cov ov'.hom in_cov
+    obtain ⟨precov, in_cov, h⟩ := is_cov
+    use precov
+    constructor
+    exact in_cov
+    intro Y hom in_bind
+    obtain ⟨Y₁, g, f, ⟨f_mem_pre, ⟨x_mem, h_eq⟩⟩⟩ := in_bind
+    have comp_mk := S.trans precov in_cov (fun ov in_precov => by
+      constructor
+      have ⟨precov', in_cov_Y, in_precov'⟩ := mk_cov ov.hom (by sorry)
       
-      sorry
     )
-    use i
-    constructor
-    assumption
-    use ov
-    constructor
-    exact ov_i
-    unfold Presieve.bind
-    funext
-    simp
-    constructor
-    intro h
-    constructor
-    constructor
-    use ov.hom
-    constructor
-    
+    have ⟨precov', in_cov_Y, in_precov'⟩ := mk_cov f f_mem_pre
+    have hg_in_sieve := h Y₁ f f_mem_pre
+    rw [← h_eq]
     
     sorry
 
