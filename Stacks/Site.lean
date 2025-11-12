@@ -20,20 +20,35 @@ namespace Site
 def toPretopology.{u, v} {C : Type v} [Category.{u, v} C] [HasPullbacks.{u, v} C]
   (S : Site C) : Pretopology C where
   coverings X := { presieve |
-    ∃ (precov : Precover X),
+    ∃ precov ∈ S.coverings X,
       ∀ (Y : C) (hom : Y ⟶ X) (in_presieve : hom ∈ @presieve Y),
         Over.mk hom ∈ precov }
   has_isos {X Y} f is_iso := by
-    simp
     use {Over.mk f}
+    constructor
+    exact S.iso f is_iso
     intro Y' g in_presieve
     change Presieve.singleton f g at in_presieve
     cases in_presieve
     rfl
   pullbacks X {Y} f precov precov_is_cov := by
-    obtain ⟨i, ⟨is_cov, ⟨ov, in_cov, h_ov_eq⟩⟩⟩ := precov_is_cov
+    simp
+    simp at precov_is_cov
+    have ⟨precov₁, ⟨precov₁_is_cov, all_ov_in_precov⟩⟩ := precov_is_cov
+    have h_pullback := S.pullback (Over.mk f) precov₁ precov₁_is_cov
+    simp at h_pullback
+    use {x | ∃ g ∈ precov₁, Over.mk (pullback.snd g.hom f) = x}
     constructor
-    use i
+    exact h_pullback
+    intro Y₁ hom in_pb_arrows
+    cases in_pb_arrows
+    case h.right.mk Z j precov_Z =>
+      simp
+      have h := all_ov_in_precov Z j precov_Z
+      use Over.mk j
+      constructor
+      exact h
+      rfl
   transitive {X} presieve presieve_Y is_cov mk_cov := by
     simp_all
     obtain ⟨i, is_cov, ov, ⟨ov_i, ov_eq⟩⟩ := is_cov
