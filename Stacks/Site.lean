@@ -19,14 +19,13 @@ namespace Site
 
 def toPretopology.{u, v} {C : Type v} [Category.{u, v} C] [HasPullbacks.{u, v} C]
   (S : Site C) : Pretopology C where
-  -- Map every precover to a presieve
+  -- There should be an easier way to do this, but we can't extract a hom easily from over
+  -- with the right type
   coverings X := (fun precov => fun ⦃Y⦄ => fun hom => Over.mk hom ∈ precov) '' (S.coverings X)
   has_isos {X Y} f is_iso := by
-    simp
     use {Over.mk f}
     constructor
     exact S.iso f is_iso
-    simp
     funext
     case h.right.h.h x g =>
       simp
@@ -38,23 +37,27 @@ def toPretopology.{u, v} {C : Type v} [Category.{u, v} C] [HasPullbacks.{u, v} C
       cases h
       rfl
   pullbacks X {Y} f precov precov_is_cov := by
-    simp
-    simp at precov_is_cov
-    have ⟨precov₁, ⟨precov₁_is_cov, all_ov_in_precov⟩⟩ := precov_is_cov
-    have h_pullback := S.pullback (Over.mk f) precov₁ precov₁_is_cov
-    simp at h_pullback
-    use {x | ∃ g ∈ precov₁, Over.mk (pullback.snd g.hom f) = x}
-    constructor
-    exact h_pullback
-    intro Y₁ hom in_pb_arrows
-    cases in_pb_arrows
-    case h.right.mk Z j precov_Z =>
+    simp_all
+    obtain ⟨x, in_cov, precov_eq⟩ := precov_is_cov
+    have h_in_cov_y := S.pullback (Over.mk f) x in_cov
+    simp at h_in_cov_y
+    use {x_1 | ∃ g ∈ x, Over.mk (pullback.snd g.hom f) = x_1}
+    simp [h_in_cov_y]
+    funext
+    case h.h.h Z g =>
       simp
-      have h := all_ov_in_precov Z j precov_Z
-      use Over.mk j
       constructor
-      exact h
-      rfl
+      intro h
+      obtain ⟨g', in_precov, ov_eq⟩ := h
+      cases ov_eq
+      apply Presieve.pullbackArrows.mk
+      rw [← precov_eq]
+      simp
+      change g' ∈ x
+      exact in_precov
+      intro h
+      cases h
+      
   transitive {X} presieve presieve_Y is_cov mk_cov := by
     simp_all
     obtain ⟨precov, in_cov, h⟩ := is_cov
