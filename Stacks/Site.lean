@@ -87,19 +87,19 @@ def toPretopology.{u, v} {C : Type v} [Category.{u, v} C] [HasPullbacks.{u, v} C
     simp_all
     funext
     case right.h.h Z g =>
-      simp
+      simp [← h_pre_eq]
       constructor
       intro h
-      have pre_Y := presieve_Y g h
-      have ⟨x, cov_Z, h_pre_eq⟩ := mk_cov g h
+      let h' : presieve g := by
+        rw [← h_pre_eq]
+        simp
+        exact h
+      have h_cov_g := mk_cov g h'
       constructor
-      use CategoryStruct.id Z
+      constructor
       use g
       constructor
       use h
-      rw [← h_pre_eq]
-      simp
-      have h := S.iso (CategoryStruct.id Z) (IsIso.id Z)
       
       sorry
 
