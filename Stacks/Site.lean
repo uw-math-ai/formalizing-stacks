@@ -62,26 +62,46 @@ def toPretopology.{u, v} {C : Type v} [Category.{u, v} C] [HasPullbacks.{u, v} C
         exists Over.mk h
   transitive {X} presieve presieve_Y is_cov mk_cov := by
     simp_all
-    obtain ⟨precov, in_cov, h⟩ := is_cov
-    use precov
+    obtain ⟨cov, is_cov, h_pre_eq⟩ := is_cov
+    let h_trans := S.trans cov is_cov (fun ov in_cov => by
+      let h : ∃ cover : Precover ov.left, cover ∈ S.coverings ov.left := by
+        have h := mk_cov ov.hom (by
+          rw[← h_pre_eq]
+          simp
+          change ov ∈ cov
+          exact in_cov
+        )
+        obtain ⟨x, ⟨mem_coverings, h⟩⟩ := h
+        simp at mem_coverings
+        use x
+      let h' := Classical.choose h
+      exists h'
+      exact Classical.choose_spec h
+    )
+    simp at h_trans
+    unfold Presieve.bind
+    simp
+    exists cov
     constructor
-    exact in_cov
-    intro Y hom in_bind
-    obtain ⟨Y₁, g, f, ⟨f_mem_pre, ⟨x_mem, h_eq⟩⟩⟩ := in_bind
-    have comp_mk := S.trans precov in_cov
-      (fun ov in_precov => { val := { Over.mk (CategoryStruct.id ov.left) }, property := (by
-        apply S.iso
-        apply IsIso.id)
-      })
-    have ⟨precov', in_cov_Y, in_precov'⟩ := mk_cov f f_mem_pre
-    have hg_in_sieve := h Y₁ f f_mem_pre
-    rw [← h_eq]
-    simp at comp_mk
-    have h : presieve (g ≫ f) := by
-      cases h_eq
+    exact is_cov
+    simp_all
+    funext
+    case right.h.h Z g =>
+      simp
+      constructor
+      intro h
+      have pre_Y := presieve_Y g h
+      have ⟨x, cov_Z, h_pre_eq⟩ := mk_cov g h
+      constructor
+      use CategoryStruct.id Z
+      use g
+      constructor
+      use h
+      rw [← h_pre_eq]
+      simp
+      have h := S.iso (CategoryStruct.id Z) (IsIso.id Z)
       
       sorry
-    sorry
 
 end Site
 
