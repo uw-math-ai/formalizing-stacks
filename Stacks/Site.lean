@@ -19,18 +19,24 @@ namespace Site
 
 def toPretopology.{u, v} {C : Type v} [Category.{u, v} C] [HasPullbacks.{u, v} C]
   (S : Site C) : Pretopology C where
-  coverings X := { presieve |
-    ∃ precov ∈ S.coverings X,
-      ∀ (Y : C) (hom : Y ⟶ X) (in_presieve : hom ∈ @presieve Y),
-        Over.mk hom ∈ precov }
+  -- Map every precover to a presieve
+  coverings X := (fun precov => fun ⦃Y⦄ => fun hom => Over.mk hom ∈ precov) '' (S.coverings X)
   has_isos {X Y} f is_iso := by
+    simp
     use {Over.mk f}
     constructor
     exact S.iso f is_iso
-    intro Y' g in_presieve
-    change Presieve.singleton f g at in_presieve
-    cases in_presieve
-    rfl
+    simp
+    funext
+    case h.right.h.h x g =>
+      simp
+      constructor
+      intro h
+      cases h
+      simp
+      intro h
+      cases h
+      rfl
   pullbacks X {Y} f precov precov_is_cov := by
     simp
     simp at precov_is_cov
@@ -57,15 +63,19 @@ def toPretopology.{u, v} {C : Type v} [Category.{u, v} C] [HasPullbacks.{u, v} C
     exact in_cov
     intro Y hom in_bind
     obtain ⟨Y₁, g, f, ⟨f_mem_pre, ⟨x_mem, h_eq⟩⟩⟩ := in_bind
-    have comp_mk := S.trans precov in_cov (fun ov in_precov => by
-      constructor
-      have ⟨precov', in_cov_Y, in_precov'⟩ := mk_cov ov.hom (by sorry)
-      
-    )
+    have comp_mk := S.trans precov in_cov
+      (fun ov in_precov => { val := { Over.mk (CategoryStruct.id ov.left) }, property := (by
+        apply S.iso
+        apply IsIso.id)
+      })
     have ⟨precov', in_cov_Y, in_precov'⟩ := mk_cov f f_mem_pre
     have hg_in_sieve := h Y₁ f f_mem_pre
     rw [← h_eq]
-    
+    simp at comp_mk
+    have h : presieve (g ≫ f) := by
+      cases h_eq
+      
+      sorry
     sorry
 
 end Site
