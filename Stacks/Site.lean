@@ -57,7 +57,9 @@ def toPretopology.{u, v} {C : Type v} [Category.{u, v} C] [HasPullbacks.{u, v} C
       exact in_precov
       intro h
       cases h
-      
+      cases precov_eq
+      case mpr.mk.refl Z h hRh =>
+        exists Over.mk h
   transitive {X} presieve presieve_Y is_cov mk_cov := by
     simp_all
     obtain ⟨precov, in_cov, h⟩ := is_cov
