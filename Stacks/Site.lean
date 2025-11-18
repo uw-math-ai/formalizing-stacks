@@ -25,6 +25,11 @@ def to_presieve.{u, v} {C : Type v} [Category.{u, v} C] (X : C) (p : Precover X)
 def of_presieve.{u, v} {C : Type v} [Category.{u, v} C] (X : C) (P : Presieve X) : Precover X :=
   { ov | ov.hom ∈ @P ov.left }
 
+def equiv_presieve_precov.{u, v} {C : Type v} [Category.{u, v} C]
+  (X : C) : Presieve X ≃ Precover X where
+  toFun := of_presieve X
+  invFun := to_presieve X
+
 end Precover
 
 namespace Site
@@ -32,7 +37,7 @@ namespace Site
 def toPretopology.{u, v} {C : Type v} [Category.{u, v} C] [HasPullbacks.{u, v} C]
   (S : Site C) : Pretopology C where
   -- A presieve is in the coverings if and only if it is in the pretopology
-  coverings X := { cov | ∃ pre ∈ S.coverings X, cov = pre.to_presieve }
+  coverings X := (Precover.to_presieve X) '' S.coverings X
   has_isos {X Y} f is_iso := by
     use {Over.mk f}
     constructor
@@ -76,27 +81,18 @@ def toPretopology.{u, v} {C : Type v} [Category.{u, v} C] [HasPullbacks.{u, v} C
         exact w_in_x
   transitive {X} presieve presieve_Y is_cov mk_cov := by
     simp_all
-    obtain ⟨cov, is_cov, h_pre_eq⟩ := is_cov
-    let h_trans := S.trans cov is_cov (fun ov in_cov => by
-      let h : ∃ cover : Precover ov.left, cover ∈ S.coverings ov.left := by
-        have h := mk_cov ov.hom (by
-          rw [← h_pre_eq]
-          simp
-          change ov ∈ cov
-          exact in_cov
-        )
-        obtain ⟨x, ⟨mem_coverings, h⟩⟩ := h
-        simp at mem_coverings
-        use x
-      let h' := Classical.choose h
-      exists h'
-      exact Classical.choose_spec h
-    )
-    
-    sorry
+    obtain ⟨pre, is_cov, pre_eq⟩ := is_cov
+    exists pre
+    constructor
+    exact is_cov
+    funext
+    case right.h.h Y f =>
+      ext
+      cases pre_eq
+      unfold Precover.to_presieve
+      constructor
+      intro h
+      
+      sorry
 
 end Site
-
-instance equivOfPretopology.{u, v} {C : Type v} [Category.{u, v} C] [HasPullbacks.{u, v} C] : Site C ≃ Pretopology C where
-  toFun S := by
-    sorry
