@@ -34,65 +34,51 @@ end Precover
 
 namespace Site
 
-def toPretopology.{u, v} {C : Type v} [Category.{u, v} C] [HasPullbacks.{u, v} C]
-  (S : Site C) : Pretopology C where
-  -- A presieve is in the coverings if and only if it is in the pretopology
-  coverings X := (Precover.to_presieve X) '' S.coverings X
-  has_isos {X Y} f is_iso := by
-    use {Over.mk f}
+def of_pretopology.{u, v} {C  :Type v} [Category.{u, v} C] [HasPullbacks.{u, v} C] (pre : Pretopology C) : Site C where
+  coverings X := (Precover.of_presieve X) '' pre.coverings X
+  iso {X Y} f is_iso := by
+    simp
+    have h := pre.has_isos f
+    use Presieve.singleton f
     constructor
-    exact S.iso f is_iso
-    funext
-    case h.right.h.h x g =>
-      simp
-      constructor
-      intro h
-      cases h
-      change Over.mk f = Over.mk f
-      rfl
-      intro h
-      cases h
-      simp
-  pullbacks X {Y} f precov precov_is_cov := by
-    simp_all
-    obtain ⟨x, in_cov, precov_eq⟩ := precov_is_cov
-    have h_in_cov_y := S.pullback (Over.mk f) x in_cov
-    simp at h_in_cov_y
-    use {x_1 | ∃ g ∈ x, Over.mk (pullback.snd g.hom f) = x_1}
+    exact h
+    ext
     constructor
-    exact h_in_cov_y
-    cases precov_eq
-    funext
-    case h.right.refl.h.h Z g =>
-      simp [Precover.to_presieve]
-      constructor
-      intro h
-      change ∃ g' ∈ x, Over.mk (pullback.snd g'.hom f) = Over.mk g
-      unfold Precover.to_presieve at h
-      cases h
-      case mp.mk Z g h =>
-        exists Over.mk g
-      case mpr =>
-        intro h
-        obtain ⟨w, ⟨w_in_x, pullback_ov_eq⟩⟩ := h
-        cases pullback_ov_eq
-        unfold Precover.to_presieve
-        apply Presieve.pullbackArrows.mk
-        exact w_in_x
-  transitive {X} presieve presieve_Y is_cov mk_cov := by
-    simp_all
-    obtain ⟨pre, is_cov, pre_eq⟩ := is_cov
-    exists pre
+    intro h
+    simp at h
+    cases h
+    simp
+    rfl
+    intro h
+    cases h
+    simp
+    change Presieve.singleton f f
+    simp
+  trans {X} cov in_cov mk_cov := by
+    obtain ⟨pres, ⟨in_cov, cov_eq⟩⟩ := in_cov
+    have h := pre.transitive pres (fun {Y} f h => by
+      apply Precover.to_presieve
+      have h := mk_cov (Over.mk f) (by
+        rw [← cov_eq]
+        unfold Precover.of_presieve
+        exact h
+      )
+      use h.val
+    )
+    
+    simp
+    
+    have ⟨precov, ⟨precov_is_cov, h_mem⟩⟩ := in_cov
+    exists precov
     constructor
-    exact is_cov
-    funext
-    case right.h.h Y f =>
-      ext
-      cases pre_eq
-      unfold Precover.to_presieve
-      constructor
-      intro h
-      
-      sorry
+    exact precov_is_cov
+    rw [h_mem]
+    ext
+    constructor
+    intro h
+    cases h_mem
+    simp at h
+    
+    sorry
 
 end Site
