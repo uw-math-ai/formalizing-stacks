@@ -34,6 +34,34 @@ end Precover
 
 namespace Site
 
+instance precoverage.{u, v} {C : Type v} [Category.{u, v} C] [HasPullbacks.{u, v} C]
+  (S : Site C) : Precoverage C where
+  coverings X := Precover.to_presieve X '' S.coverings X
+
+def pretop_has_isos.{u, v} {C : Type v} [Category.{u, v} C] [HasPullbacks.{u, v} C]
+  (S : Site C) : ∀ ⦃X Y : C⦄ (f : Y ⟶ X) [IsIso f],
+    Presieve.singleton f ∈ Precoverage.coverings S.precoverage X := fun ⦃X Y⦄ f h_iso => by
+  have h := S.iso f h_iso
+  unfold Site.precoverage
+  simp
+  use {Over.mk f}
+  constructor
+  · exact h
+  funext
+  case h.right.h.h Y h =>
+    simp
+    constructor
+    · intro h'
+      cases h'
+      simp
+    intro h'
+    cases h'
+    rfl
+
+end Site
+
+namespace Site
+
 def of_pretopology.{u, v} {C  :Type v} [Category.{u, v} C] [HasPullbacks.{u, v} C] (pre : Pretopology C) : Site C where
   coverings X := (Precover.of_presieve X) '' pre.coverings X
   iso {X Y} f is_iso := by
@@ -64,20 +92,11 @@ def of_pretopology.{u, v} {C  :Type v} [Category.{u, v} C] [HasPullbacks.{u, v} 
         exact h
       )
       use h.val
+    ) in_cov (fun {Y} f in_pre => by
+      simp
+      have h := mk_cov 
+      sorry
     )
-    
-    simp
-    
-    have ⟨precov, ⟨precov_is_cov, h_mem⟩⟩ := in_cov
-    exists precov
-    constructor
-    exact precov_is_cov
-    rw [h_mem]
-    ext
-    constructor
-    intro h
-    cases h_mem
-    simp at h
     
     sorry
 
