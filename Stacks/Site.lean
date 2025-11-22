@@ -89,16 +89,50 @@ def pretop_has_pullbacks.{u, v} {C : Type v} [Category.{u, v} C] [HasPullbacks.{
 
 def pretop_transitive.{u, v} {C : Type v} [Category.{u, v} C] [HasPullbacks.{u, v} C] (S : Site C) :
   ∀ ⦃X : C⦄ (Si : Presieve X) (Ti : ∀ ⦃Y⦄ (f : Y ⟶ X), Si f → Presieve Y),
-      Si ∈ S.precoverage.coverings X → (∀ ⦃Y⦄ (f) (H : Si f), Ti f H ∈ S.precoverage.coverings Y) → Si.bind Ti ∈ S.precoverage.coverings X :=
+      Si ∈ S.precoverage.coverings X → (∀ ⦃Y⦄ (f) (H : Si f), Ti f H ∈ S.precoverage.coverings Y) →
+      Si.bind Ti ∈ S.precoverage.coverings X :=
   fun ⦃X⦄ Si Ti in_cov mk_cov => by
   let ⟨precov, in_cov, precov_eq⟩ := in_cov
-  have h := S.trans precov in_cov (fun ov in_precov => by
-    have h := mk_cov ov.hom (by rw [← precov_eq]; exact in_precov)
-    simp [Site.precoverage] at h
+  have h_trans := S.trans precov in_cov (fun ov in_precov => by
+    have ⟨x, in_cov, h_eq⟩ := mk_cov ov.hom (by rw [← precov_eq]; exact in_precov)
+    simp at h_eq
+    simp at in_cov
+    use x
+  )
+  simp [Site.precoverage] at mk_cov
+  simp [Site.precoverage]
+  constructor
+  constructor
+  · exact h_trans
+  funext
+  case h.right.h.h Z g =>
+    simp
+    constructor
+    intro ⟨ov, in_pre, ⟨ov_left, in_cov_left, ⟨g_ov, in_ov_left, g_eq⟩⟩⟩
+    let ⟨Cov, in_cov_left', pre_eq⟩ := mk_cov ov.hom (by
+      cases precov_eq
+      simp [Precover.to_presieve]
+      exact in_pre
+    )
+    let g_hom := g_ov.hom
+    simp at in_cov_left'
+    simp at pre_eq
+    simp [Presieve.bind]
+    -- ov.hom = x
+    -- g_1 = Cov.hom
+    -- Not sure what Y is referring to, it's completely unbound
+    constructor
+    cases g_eq
+    exists g_ov.hom
+    exists ov.hom
+    constructor
+    cases precov_eq
+    simp [Precover.to_presieve]
+    use in_pre
+    rw [← pre_eq]
+    simp [Precover.to_presieve]
     
     sorry
-  )
-  sorry
 
 end Site
 
@@ -124,11 +158,11 @@ def of_pretopology.{u, v} {C  :Type v} [Category.{u, v} C] [HasPullbacks.{u, v} 
     simp
     change Presieve.singleton f f
     simp
-  trans {X} cov in_cov mk_cov := by
+  trans {X} cov in_cov mk_cov' := by
     obtain ⟨pres, ⟨in_cov, cov_eq⟩⟩ := in_cov
     have h := pre.transitive pres (fun {Y} f h => by
       apply Precover.to_presieve
-      have h := mk_cov (Over.mk f) (by
+      have h := mk_cov' (Over.mk f) (by
         rw [← cov_eq]
         unfold Precover.of_presieve
         exact h
