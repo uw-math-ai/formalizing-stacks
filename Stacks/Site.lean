@@ -109,70 +109,20 @@ def pretop_transitive.{u, v} {C : Type v} [Category.{u, v} C] [HasPullbacks.{u, 
     simp
     constructor
     intro ⟨ov, in_pre, ⟨ov_left, in_cov_left, ⟨g_ov, in_ov_left, g_eq⟩⟩⟩
-    let ⟨Cov, in_cov_left', pre_eq⟩ := mk_cov ov.hom (by
-      cases precov_eq
-      simp [Precover.to_presieve]
-      exact in_pre
-    )
-    let g_hom := g_ov.hom
-    simp at in_cov_left'
-    simp at pre_eq
-    simp [Presieve.bind]
-    -- ov.hom = x
-    -- g_1 = Cov.hom
-    -- Not sure what Y is referring to, it's completely unbound
-    constructor
-    cases g_eq
-    exists g_ov.hom
-    exists ov.hom
-    constructor
     cases precov_eq
-    simp [Precover.to_presieve]
-    use in_pre
-    rw [← pre_eq]
-    simp [Precover.to_presieve]
-    
-    sorry
-
-end Site
-
-namespace Site
-
-def of_pretopology.{u, v} {C  :Type v} [Category.{u, v} C] [HasPullbacks.{u, v} C] (pre : Pretopology C) : Site C where
-  coverings X := (Precover.of_presieve X) '' pre.coverings X
-  iso {X Y} f is_iso := by
-    simp
-    have h := pre.has_isos f
-    use Presieve.singleton f
+    simp_all
+    simp [Site.precoverage] at *
+    let ⟨Cov, in_cov, pre_eq⟩ := in_cov
+    unfold Precover.to_presieve at pre_eq
+    simp [Presieve.bind]
     constructor
-    exact h
-    ext
+    -- f = g_ov.hom
+    -- g = ov.hom
+    cases g_eq
+    use g_ov.hom
+    use ov.hom
     constructor
-    intro h
-    simp at h
-    cases h
-    simp
-    rfl
-    intro h
-    cases h
-    simp
-    change Presieve.singleton f f
-    simp
-  trans {X} cov in_cov mk_cov' := by
-    obtain ⟨pres, ⟨in_cov, cov_eq⟩⟩ := in_cov
-    have h := pre.transitive pres (fun {Y} f h => by
-      apply Precover.to_presieve
-      have h := mk_cov' (Over.mk f) (by
-        rw [← cov_eq]
-        unfold Precover.of_presieve
-        exact h
-      )
-      use h.val
-    ) in_cov (fun {Y} f in_pre => by
-      simp
-      have h := mk_cov 
-      sorry
-    )
+    exists in_pre
     
     sorry
 
