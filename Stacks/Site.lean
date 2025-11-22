@@ -10,8 +10,8 @@ structure Site.{u, v} (C : Type v) [Category.{u, v} C] [HasPullbacks.{u, v} C] w
   coverings (X : C) : Set (Precover X)
   iso {X Y : C} (f : Y ⟶ X) : IsIso f → { Over.mk f } ∈ coverings X
   trans {X : C} (U : Precover X) (hU : U ∈ coverings X)
-        (V : ∀ f ∈ U, { cover // cover ∈ coverings f.left }) :
-    { Over.mk (g.hom ≫ f.hom) | (f : Over X) (hf : f ∈ U) (g ∈ (V f hf).val) } ∈ coverings X
+        (V : ∀ f ∈ U, ∃ cover, cover ∈ coverings f.left) :
+    { Over.mk (g.hom ≫ f.hom) | (f ∈ U) (cov ∈ coverings f.left) (g ∈ cov) } ∈ coverings X
   pullback {X : C} (f : Over X) (U : Precover X) (hU : U ∈ coverings X) :
     { Over.mk (pullback.snd g.hom f.hom) | g ∈ U } ∈ coverings f.left
 
@@ -61,23 +61,17 @@ def pretop_has_isos.{u, v} {C : Type v} [Category.{u, v} C] [HasPullbacks.{u, v}
 def pretop_has_pullbacks.{u, v} {C : Type v} [Category.{u, v} C] [HasPullbacks.{u, v} C]
   (S : Site C) :
     ∀ ⦃X Y : C⦄ (f : Y ⟶ X) (Si), Si ∈ S.precoverage.coverings X
-      → Presieve.pullbackArrows f Si ∈ S.precoverage.coverings Y := fun ⦃X Y⦄ f Si in_cov => by
-  obtain ⟨x, in_coverings, h_eq⟩ := in_cov
+      → Presieve.pullbackArrows f Si ∈ S.precoverage.coverings Y :=
+      fun ⦃X Y⦄ f Si ⟨x, in_coverings, h_eq⟩ => by
   -- Set of all pullback overs that should be in coverings Y from the Site's perspective
   have h := S.pullback (Over.mk f) (Precover.of_presieve X Si) (by
     cases h_eq
     exact in_coverings
   )
-  simp at h
   cases h_eq
-  unfold Precover.to_presieve at *
-  unfold Site.precoverage
-  simp
   constructor
   constructor
   · exact h
-  unfold Precover.to_presieve
-  simp
   funext
   case refl.h.right.h.h Z g =>
     simp
@@ -92,6 +86,19 @@ def pretop_has_pullbacks.{u, v} {C : Type v} [Category.{u, v} C] [HasPullbacks.{
     constructor
     · exact h
     rfl
+
+def pretop_transitive.{u, v} {C : Type v} [Category.{u, v} C] [HasPullbacks.{u, v} C] (S : Site C) :
+  ∀ ⦃X : C⦄ (Si : Presieve X) (Ti : ∀ ⦃Y⦄ (f : Y ⟶ X), Si f → Presieve Y),
+      Si ∈ S.precoverage.coverings X → (∀ ⦃Y⦄ (f) (H : Si f), Ti f H ∈ S.precoverage.coverings Y) → Si.bind Ti ∈ S.precoverage.coverings X :=
+  fun ⦃X⦄ Si Ti in_cov mk_cov => by
+  let ⟨precov, in_cov, precov_eq⟩ := in_cov
+  have h := S.trans precov in_cov (fun ov in_precov => by
+    have h := mk_cov ov.hom (by rw [← precov_eq]; exact in_precov)
+    simp [Site.precoverage] at h
+    
+    sorry
+  )
+  sorry
 
 end Site
 
