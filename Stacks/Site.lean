@@ -58,6 +58,41 @@ def pretop_has_isos.{u, v} {C : Type v} [Category.{u, v} C] [HasPullbacks.{u, v}
     cases h'
     rfl
 
+def pretop_has_pullbacks.{u, v} {C : Type v} [Category.{u, v} C] [HasPullbacks.{u, v} C]
+  (S : Site C) :
+    ∀ ⦃X Y : C⦄ (f : Y ⟶ X) (Si), Si ∈ S.precoverage.coverings X
+      → Presieve.pullbackArrows f Si ∈ S.precoverage.coverings Y := fun ⦃X Y⦄ f Si in_cov => by
+  obtain ⟨x, in_coverings, h_eq⟩ := in_cov
+  -- Set of all pullback overs that should be in coverings Y from the Site's perspective
+  have h := S.pullback (Over.mk f) (Precover.of_presieve X Si) (by
+    cases h_eq
+    exact in_coverings
+  )
+  simp at h
+  cases h_eq
+  unfold Precover.to_presieve at *
+  unfold Site.precoverage
+  simp
+  constructor
+  constructor
+  · exact h
+  unfold Precover.to_presieve
+  simp
+  funext
+  case refl.h.right.h.h Z g =>
+    simp
+    constructor
+    · intro ⟨ov, in_x, ov_eq⟩
+      cases ov_eq
+      constructor
+      · exact in_x
+    intro ⟨A, j, h⟩
+    change Over.mk (Over.mk j).hom ∈ x at h
+    constructor
+    constructor
+    · exact h
+    rfl
+
 end Site
 
 namespace Site
