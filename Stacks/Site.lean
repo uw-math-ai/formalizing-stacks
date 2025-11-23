@@ -94,46 +94,22 @@ def pretop_transitive.{u, v} {C : Type v} [Category.{u, v} C] [HasPullbacks.{u, 
       Si ∈ S.precoverage.coverings X → (∀ ⦃Y⦄ (f) (H : Si f), Ti f H ∈ S.precoverage.coverings Y) →
       Si.bind Ti ∈ S.precoverage.coverings X :=
   fun ⦃X⦄ Si Ti in_cov mk_cov => by
-  let ⟨precov, in_cov, precov_eq⟩ := in_cov
-  let h_trans := S.trans precov in_cov (fun ov in_precov => by
-    let ⟨x, in_cov, h_eq⟩ := mk_cov ov.hom (by rw [← precov_eq]; exact in_precov)
-    simp at h_eq
-    simp at in_cov
-    use x
+  simp [Site.precoverage] at in_cov
+  let ⟨pre, in_cov, eq_si⟩ := in_cov
+  choose cov h_cov h_eq using fun (f : Over X) (hf : f ∈ pre) => mk_cov f.hom (by
+    rw [← eq_si]
+    exact hf
   )
-  simp [Site.precoverage]
-  simp at h_trans
-  constructor
-  constructor
-  · exact h_trans
+  let pullback_cov_mem := S.trans pre in_cov (fun ov in_pre => ⟨cov ov in_pre, h_cov ov in_pre⟩)
+  refine ⟨_, pullback_cov_mem, ?_⟩
   funext
-  case h.right.h.h Z g =>
-    simp_all
+  case h.h Z g =>
+    ext
     constructor
-    intro h
-    cases precov_eq
-    let ⟨ov, in_precov, precov_comp, is_cov, ⟨ov_precomp, ov_precomp_in_precomp, ov_eq⟩⟩ := h
-    simp [Presieve.bind]
+    intro ⟨ov, in_pre, pre_comp, precomp_cov, ov_comp, pre_ov, ov_mem_pre, ov_comp_eq⟩
     constructor
-    let ov_precomp_hom := ov_precomp.hom
-    cases ov_eq
-    use ov_precomp.hom
-    use ov.hom
-    constructor
-    exists in_precov
-    let h' := mk_cov ov.hom (by assumption)
-    simp at h'
-    simp [Site.precoverage] at *
-    cases ov_precomp
-    simp_all
-    obtain ⟨w, w_mem, h_eq⟩ := h'
-    rw [← h_eq]
-    simp [Precover.to_presieve]
-    change Over.mk _ ∈ w
-    simp_all
-    change Over.mk _ ∈ precov_comp at ov_precomp_in_precomp
-    apply Set.mem_of_mem_of_subset
-    exact ov_precomp_in_precomp
+    cases ov_comp_eq
+    refine ⟨pre_ov.hom, ov.hom, by simp [← eq_si]; exact in_pre, ?_, rfl⟩
     
     sorry
 
