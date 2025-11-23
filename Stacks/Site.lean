@@ -11,7 +11,9 @@ structure Site.{u, v} (C : Type v) [Category.{u, v} C] [HasPullbacks.{u, v} C] w
   iso {X Y : C} (f : Y ⟶ X) : IsIso f → { Over.mk f } ∈ coverings X
   trans {X : C} (U : Precover X) (hU : U ∈ coverings X)
         (V : ∀ f ∈ U, ∃ cover, cover ∈ coverings f.left) :
-    { Over.mk (g.hom ≫ f.hom) | (f ∈ U) (cov ∈ coverings f.left) (g ∈ cov) } ∈ coverings X
+    { Over.mk (g.hom ≫ f.hom) | (f : Over X) (hU: f ∈ U)
+    (cov : Precover f.left) (hC : cov ∈ coverings f.left)
+    (_cov_eq : V f hU = ⟨cov, hC⟩) (g ∈ cov) } ∈ coverings X
   pullback {X : C} (f : Over X) (U : Precover X) (hU : U ∈ coverings X) :
     { Over.mk (pullback.snd g.hom f.hom) | g ∈ U } ∈ coverings f.left
 
@@ -101,6 +103,7 @@ def pretop_transitive.{u, v} {C : Type v} [Category.{u, v} C] [HasPullbacks.{u, 
   )
   simp [Site.precoverage] at mk_cov
   simp [Site.precoverage]
+  simp at h_trans
   constructor
   constructor
   · exact h_trans
@@ -123,6 +126,7 @@ def pretop_transitive.{u, v} {C : Type v} [Category.{u, v} C] [HasPullbacks.{u, 
     use ov.hom
     constructor
     exists in_pre
+    have ⟨Cov', h⟩ := mk_cov ov.hom in_pre
     
     sorry
 
