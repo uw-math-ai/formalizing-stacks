@@ -13,7 +13,7 @@ structure Site.{u, v} (C : Type v) [Category.{u, v} C] [HasPullbacks.{u, v} C] w
         (V : ∀ f ∈ U, ∃ cover, cover ∈ coverings f.left) :
     { Over.mk (g.hom ≫ f.hom) | (f : Over X) (hU: f ∈ U)
     (cov : Precover f.left) (hC : cov ∈ coverings f.left)
-    (_cov_eq : V f hU = ⟨cov, hC⟩) (g ∈ cov) } ∈ coverings X
+    (g : Over f.left) (hg : g ∈ cov) } ∈ coverings X
   pullback {X : C} (f : Over X) (U : Precover X) (hU : U ∈ coverings X) :
     { Over.mk (pullback.snd g.hom f.hom) | g ∈ U } ∈ coverings f.left
 
@@ -93,23 +93,32 @@ def pretop_transitive.{u, v} {C : Type v} [Category.{u, v} C] [HasPullbacks.{u, 
   ∀ ⦃X : C⦄ (Si : Presieve X) (Ti : ∀ ⦃Y⦄ (f : Y ⟶ X), Si f → Presieve Y),
       Si ∈ S.precoverage.coverings X → (∀ ⦃Y⦄ (f) (H : Si f), Ti f H ∈ S.precoverage.coverings Y) →
       Si.bind Ti ∈ S.precoverage.coverings X :=
-  fun ⦃X⦄ Si Ti in_cov mk_cov => by
-  simp [Site.precoverage] at in_cov
-  let ⟨pre, in_cov, eq_si⟩ := in_cov
-  choose cov h_cov h_eq using fun (f : Over X) (hf : f ∈ pre) => mk_cov f.hom (by
-    rw [← eq_si]
-    exact hf
+  fun ⦃X⦄ Si Ti ⟨pre, in_cov, heq⟩ mk_cov => by
+  simp [Site.precoverage] at *
+  cases heq
+  let h := S.trans pre in_cov (fun f in_cov => by
+    let ⟨cov, in_coverings, pre_eq⟩ := mk_cov f.hom (by simp; exact in_cov)
+    exists cov
   )
-  let pullback_cov_mem := S.trans pre in_cov (fun ov in_pre => ⟨cov ov in_pre, h_cov ov in_pre⟩)
-  refine ⟨_, pullback_cov_mem, ?_⟩
+  simp at h
+  exists {x | ∃ f ∈ pre, ∃ cov ∈ S.coverings f.left, ∃ g ∈ cov, Over.mk (g.hom ≫ f.hom) = x}
+  constructor
+  · exact h
   funext
-  case h.h Z g =>
+  case refl.right.h.h Z g =>
     ext
     constructor
-    intro ⟨ov, in_pre, pre_comp, precomp_cov, ov_comp, pre_ov, ov_mem_pre, ov_comp_eq⟩
+    intro h
+    simp at h
+    let ⟨ov, in_pre, cov_comp, is_cov_comp, ov_comp, ov_in_comp, ov_eq⟩ := h
+    let ov_hom : ov.left ⟶ X := ov.hom
+    let ov_comp_hom : ov_comp.left ⟶ ov.left := ov_comp.hom
+    cases ov_eq
     constructor
-    cases ov_comp_eq
-    refine ⟨pre_ov.hom, ov.hom, by simp [← eq_si]; exact in_pre, ?_, rfl⟩
+    exists ov_comp_hom
+    exists ov_hom
+    exists in_pre
+    constructor
     
     sorry
 
