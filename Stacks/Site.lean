@@ -96,6 +96,8 @@ def pretop_transitive.{u, v} {C : Type v} [Category.{u, v} C] [HasPullbacks.{u, 
   fun ⦃X⦄ Si Ti ⟨pre, in_cov, heq⟩ mk_cov => by
   simp [Site.precoverage] at *
   cases heq
+  simp at Ti
+  change ⦃Y : C⦄ → (f : Y ⟶ X) → Over.mk f ∈ pre → Presieve Y at Ti
   let h := S.trans pre in_cov (fun f in_cov => by
     let ⟨cov, in_coverings, pre_eq⟩ := mk_cov f.hom (by simp; exact in_cov)
     exists cov
@@ -111,6 +113,9 @@ def pretop_transitive.{u, v} {C : Type v} [Category.{u, v} C] [HasPullbacks.{u, 
     intro h
     simp at h
     let ⟨ov, in_pre, cov_comp, is_cov_comp, ov_comp, ov_in_comp, ov_eq⟩ := h
+    let ⟨cov, in_coverings, pre_eq⟩ := mk_cov ov.hom (by simp [Precover.to_presieve]; exact in_pre)
+    simp at pre_eq
+    simp at cov
     let ov_hom : ov.left ⟶ X := ov.hom
     let ov_comp_hom : ov_comp.left ⟶ ov.left := ov_comp.hom
     cases ov_eq
@@ -119,6 +124,13 @@ def pretop_transitive.{u, v} {C : Type v} [Category.{u, v} C] [HasPullbacks.{u, 
     exists ov_hom
     exists in_pre
     constructor
+    rw [← pre_eq]
+    
+    simp at in_coverings
+    simp [Precover.to_presieve] at pre_eq
+    rw [← pre_eq]
+    simp [Precover.to_presieve]
+    change ov_comp ∈ cov
     
     sorry
 
