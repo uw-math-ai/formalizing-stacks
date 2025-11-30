@@ -1,0 +1,176 @@
+\documentclass{article}
+\usepackage{amsmath}
+\usepackage{fullpage}
+
+\title{Translating Sites into Lean}
+\author{Alexandra Aiello, Eric Klavins, Leopold Meyer, James Martin\\\textit{Math AI Lab, University of Washington}}
+
+\begin{document}
+\maketitle
+
+\section{Abstract}
+We set out to show that Mathlib did it wrong, but ended up showing that Mathlab did it right.
+However, we learned a lot along the way, some of which we think would be valuable to you.
+Our contributions include a practical and formal explanation and comparison of four
+definitions of site and proofs of several examples. This paper might be valuable to
+mathematicians wanting to understand the motivations for Mathlib definitions
+and the translation of informal mathematics to formal ones.
+
+\section{Introduction}
+The Stacks project is widely regarded as the golden standard for algebraic topology/geometry.
+The advisors regard Mathlib as ill-documented, building upon dubious definitions
+made unilaterally, potentially containing incoherent definitions across branches of mathematics,
+and lacking in examples. (TODO: We need to justify the purpose for the project without
+such blatant and strong opinions.) Consequently, we set out to formalize sites, sheaves,
+and stacks precisely following the Stacks project with an emphasis on examples.
+Our project progressively diverged from this goal as we encountered friction between
+the language of informal mathematics and the language of type theory.
+
+\section{Definitions}
+We progressed through several definitions of Site, which we will introduce and compare below.
+According to nLab, all of these sites are equivalent as the underlying site of a sheaf,
+but they are not in bijection.
+
+We characterize these sites by the underlying definition of Precover.
+The first three definitions share almost exactly the same axioms,
+differing only to accomodate the change in definition of precover.
+On the other hand, the fourth definition has substantially different axioms.
+
+A site is defined over some category $C$.
+It is a set of covers such that isomorphisms are covers, covers are stable under pullback,
+and the set of covers is transitive. (TODO: Elaborate)
+
+To contrast, the Grothendieck topology definition (extremely dubious upcoming)
+contains the maximal sieve, stability under pullback, and transitivity,
+with the additional constraint that the ``precovers'' are actually sieves---
+individually closed under precomposition. (TODO: Elaborate, clarify, probably move.)
+
+\subsubsection*{The indexed families definition}
+Let $X \in C$. We define an \textit{indexed precover} $U$ over $X$ as an indexing set $I$
+and a pair of indexed families $U_i : C$ and $f_i : U_i \to X$. This is a literal
+translation of the definition used by the Stacks project.
+
+\subsubsection*{The sets of morphisms definition}
+Let $X \in C$. We define a \textit{set precover} $U$ over $X$ as a set of morphisms
+$(Y, f) : (Y : C) \times (Y \to X)$. This is the definition used by nLab.
+
+Every set precover immediately generates an indexed precover where $U$ acts as
+its own indexing set. Specifically, we define $U_{(Y,f)} := Y$ and $f_{(Y,f)} := f$.
+Conversely, we can easily recover our set precover as $\{ (U_i, f_i) | i \in I \}$.
+
+Although these definitions look very similar, they are not in bijection.
+In particular, an indexed precover may contain two $i,j \in I$ such that $i \ne j$
+but $f_i = f_j$, i.e. the precover contains the same morphism twice.
+Therefore, even disregarding the choice of indexing set, the definitions are not equal.
+
+We regard this duplication as a syntactic artifact that has no bearing on the semantic
+notion of precover; informally, we might regard the definitions as equivalent.
+
+However, in Lean, the difference is significant when considering equality of sites---
+the redundant information \textit{cannot} be ignored---and the indexing notation
+that is convenient for informal mathematics becomes inconvenient. (TODO: Elaborate)
+We expect that the set precover would be preferable to the indexed definition for
+the purpose of formalizing mathematics in Lean---even when using the Stacks project
+as a reference.
+
+\subsubsection*{The presieve definition}
+Let $X \in C$. We define a $\textit{presieve}$ $U$ over $X$ as a family of sets of
+morphisms $U_Y : Y \to X$. This definition is in Mathlib under the name ``Pretopology''.
+
+Presieves and sets of morphisms are trivially equivalent.
+Specifically, we define our set precover as $\{ (Y, f) | Y \in C, f \in U_Y \}$
+and our presieve with $U_Y := \{ f | (Y, f) \in U \}$.
+
+Mathlib does not contain our literal definition of ``set precover''
+or the corresponding notion of ``site'', but it does have theorems
+that translate between the respective precovers and site axioms.
+(TODO: Which were they, again?)
+
+This translation reflects the isomorphism between
+$(\exists Y, Y \to X) \to Prop$ and $\forall Y, (Y \to X) \to Prop$,
+an operation that type theorists call ``currying''.
+Although the set precover definition is more intuitive coming from the perspective
+of the indexed set definition, the computer scientists on our team intuitively
+prefer presieves because $\forall$ is privileged over $\exists$ in most
+functional programming languages. Additionally, as the name suggests,
+presieves more closely relate to sieves---our next definition of covering.
+
+The fact that Mathlib uses presieves over set precovers likely makes the
+point moot; the strong advantage of using Mathlib's existing theorems makes
+presieves strongly preferable \textit{a posteriori}.
+
+\subsubsection*{The sieve definition}
+This definition is Mathlib under the name ``Grothendieck Topology''.
+
+A sieve is a presieve that is closed under precomposition.
+
+\section{Translations}
+Translations:
+\begin{itemize}
+\item Explicit indices $\leftrightarrow$ Implicit indices:
+  \begin{enumerate}
+  \item[$(\rightarrow)$]: $\{ (Y_i, f_i) | i \in I \}$
+  \item[$(\leftarrow)$]: The indexing set *is* the set of $(Y, f)$ pairs.
+        Formally: $Y_i := i_0$, $f_i := i_1$.
+  \end{enumerate}
+  This map is an injection, but not a surjection. It is possible that $f_i = f_j$ for $i \not = j$; the conversions forgets about duplicate inclusions.
+\item Precovers $\leftrightarrow$ Presieves:
+  \begin{enumerate}
+  \item[$(\rightarrow)$]: $P Y := \{ f | (Y, f) \in Q \}$
+  \item[$(\leftarrow)$]: $\{ (Y, f) | f \in Q Y \}$
+  \end{enumerate}
+  This map is a bijection.
+\item Pretopology $\leftrightarrow$ Topology:
+  \begin{enumerate}
+  \item[$(\rightarrow)$]: The subset of presieves that are closed under precomposition.
+        These are guaranteed to exist because
+  \item[$(\leftarrow)$]: All sieves are presieves. Forget the sieve structure.
+  \end{enumerate}
+  This map is an injection, but not a surjection. A topology is generated by / the completion of a pretopology.
+\end{itemize}
+
+\section{Conclusion}
+Our(?) opinions:
+\begin{itemize}
+\item Explicit indices are the most convenient for informal mathematics, but awkward in Lean.
+\item Precovers are the most intuitive translation of precovers into type-theoretic language.
+\item Presieves are the most convenient representation to work with in Lean.
+\item Grothendieck topologies are the most semantically correct.
+\end{itemize}
+
+The most challenging part of formalized mathematics is not in understanding definitions,
+but in writing proofs, and presieves and Grothendieck topologies are the most convenient
+to use in Lean. It happens that these are precisely the definitions used in Mathlib.
+
+\subsection{Challenges}
+We did not make as much progress as we would've liked this quarter.
+A major problem is that the undergraduates involved lack formal---and largely
+informal---knowledge and experience in this branch of mathematics. Much of the time spent
+on this project has been trying to understand the mathematics in the first place,
+a process which is very inefficient without background knowledge to work off of,
+much less understand the \textit{motivations} for what they're working on.
+This problem is unlikely to go away, and may limit the feasibility of some options
+for future work.
+
+Additionally, about a third of our meetings consisted mostly of re-explaining our work
+to third parties or absent project members. This was not the main factor in our progress,
+but wasn't a particularly effective use of time.
+
+Finally, this author is an idiot and massively overscheduled himself this quarter,
+reducing the time he had available to contribute.
+
+\subsection{Future work}
+Our project was originally to formalize the Stacks project as directly as possible,
+but we've found that Mathlib's existing definitions are the most suitable for Lean.
+Although we could try to translate more definitions, we expect that we would come
+to the same conclusions.
+
+If we were to continue translating the Stacks project, our main product will most likely be
+documentation for mathematicians learning to translate from informal mathematics to lean
+(or the converse for computer scientists).
+
+Alternatively, we could pivot from a lockstep translation of the Stacks project to Lean to
+more general work demonstrating examples, proving theorems, and writing documentation---drawing
+on the Stacks project for guidance, but not taking it as gospel.
+
+\end{document}
