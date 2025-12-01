@@ -12,7 +12,7 @@ instance instSite.{u} : Site' Scheme.{u} :=
   Site'.of_pretopology Scheme.zariskiPretopology
 
 instance instSubcanonical.{u} : GrothendieckTopology.Subcanonical instSite.{u}.toGrothendieck := by
-  simp [instSite, Site'.toGrothendieck, ← Scheme.zariskiTopology_eq]
+  simp [instSite, Site'.toGrothendieck]
   exact Scheme.subcanonical_zariskiTopology
 
 def sheaf.{u} (S : Scheme.{u}) : Sheaf (Site'.toGrothendieck instSite.{u}) (Type u) :=
