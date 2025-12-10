@@ -36,6 +36,7 @@ def π.app.{u} (F : WalkingCospan ⥤ Type u) (span : WalkingCospan) :
     simp only [Functor.const_obj_obj]
     exact (fun X => X.val.fst) ≫ F.map WalkingCospan.Hom.inl
 
+@[simp]
 def π.naturality.{u} (F : WalkingCospan ⥤ Type u)
   ⦃X Y : WalkingCospan⦄
   (f : X ⟶ Y) :
@@ -54,6 +55,7 @@ def π.naturality.{u} (F : WalkingCospan ⥤ Type u)
       a.property
     simp only [cone_pt, cone.pt.t_p, id_eq, types_comp_apply, f_eq]
 
+@[simp]
 def cone.{u} (F : WalkingCospan ⥤ Type u) : Cone F where
   pt := cone_pt F
   π := {
@@ -61,6 +63,7 @@ def cone.{u} (F : WalkingCospan ⥤ Type u) : Cone F where
     naturality := π.naturality F
   }
 
+@[simp]
 def isLimit.lift.{u} (F : WalkingCospan ⥤ Type u) (s : Cone F) (point : s.pt) : (cone F).pt :=
   match s with
   | .mk pt' π' => by
@@ -74,25 +77,18 @@ def isLimit.lift.{u} (F : WalkingCospan ⥤ Type u) (s : Cone F) (point : s.pt) 
            (π'.app WalkingCospan.right ≫ F.map WalkingCospan.Hom.inr) point
     rw [map_right]
 
+@[simp]
 def isLimit.fac.{u} (F : WalkingCospan ⥤ Type u) (s : Cone F)
   (span : WalkingCospan) : isLimit.lift F s ≫ (cone F).π.app span = s.π.app span := by
-  unfold lift
-  unfold cone
-  simp only [cone_pt, cone.pt.t_p, Functor.const_obj_obj, π.app, id_eq]
+  simp only [cone, cone_pt, cone.pt.t_p, Functor.const_obj_obj, π.app, id_eq]
   cases span
-  ext
-  case none.h a =>
-    simp only [types_comp_apply]
+  · ext a
     change (s.π.app WalkingCospan.left ≫ F.map WalkingCospan.Hom.inl) a = s.π.app none a
     rw [← s.π.naturality WalkingCospan.Hom.inl]
     simp only [Functor.const_obj_obj, Functor.const_obj_map, types_comp_apply, types_id_apply]
   case some val =>
     cases val
-    simp only
-    ext
-    · simp
-    ext
-    · simp
+    repeat (ext; simp)
 
 def has_limit.{u} : ∀ (x : WalkingCospan ⥤ Type u), HasLimit x := fun F =>
   ⟨⟨{
