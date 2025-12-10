@@ -99,10 +99,35 @@ def SurjectiveFamiliesSite.{u} : Site (Type u) := {
       change _ = cone.π.app WalkingCospan.left ≫ my_F_map (𝟙 WalkingCospan.left) at nat_left
       change _ = cone.π.app WalkingCospan.right ≫ my_F_map (𝟙 WalkingCospan.right) at nat_right
 
-      simp only [Functor.const_obj_obj, Functor.const_obj_map, Category.id_comp] at nat_left
-      simp? at nat_right
+      unfold my_F_map at nat_left
+      unfold my_F_map at nat_right
+
+      simp at nat_left
+      simp at nat_right
 
       rw [nat_left, nat_right]
+
+      unfold my_F_map
+      simp only [Functor.const_obj_obj, Functor.id_obj, Category.assoc]
+      unfold my_F_obj
+      simp only
+      conv =>
+        left
+        right
+        rw [Category.id_comp]
+        rfl
+      conv =>
+        right
+        right
+        rw [Category.id_comp]
+        rfl
+      ext a
+      change (cone.π.app WalkingCospan.left ≫ g.hom) a = (cone.π.app WalkingCospan.right ≫ f.hom) a
+      simp?
+      let o := cone.π.app WalkingCospan.left a
+      unfold my_F at o
+      unfold my_F_obj at o
+      simp at o
       
       sorry
     )
