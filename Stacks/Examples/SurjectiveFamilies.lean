@@ -53,26 +53,27 @@ def has_limit.{u} : ∀ (x : WalkingCospan ⥤ Type u), HasLimit x := fun F =>
       isLimit := {
         lift s point := match s with
         | .mk pt' π' => by
-          change pt' at point
-          dsimp
-          let obj_left : F.obj WalkingCospan.left := π'.app .left point
-          let obj_right : F.obj WalkingCospan.right := π'.app .right point
-          let obj_one : F.obj WalkingCospan.one := π'.app .one point
-
           let map_left := π'.naturality WalkingCospan.Hom.inl
           let map_right := π'.naturality WalkingCospan.Hom.inr
 
           simp at map_left
           simp [map_left] at map_right
 
-          refine ⟨⟨obj_left, obj_right⟩, ?_⟩
+          refine ⟨⟨π'.app .left point, π'.app .right point⟩, ?_⟩
 
           change (π'.app WalkingCospan.left ≫ F.map WalkingCospan.Hom.inl) point  =
                  (π'.app WalkingCospan.right ≫ F.map WalkingCospan.Hom.inr) point
 
           rw [map_right]
-        fac := by
-          sorry
+        fac s span := by
+          simp only [Functor.const_obj_obj, id_eq]
+          unfold hom_left
+          unfold hom_right
+          cases span
+          ext
+          simp
+          simp [pt_left]
+          
       }
   }⟩⟩
 
