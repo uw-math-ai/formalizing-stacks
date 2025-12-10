@@ -23,34 +23,57 @@ def has_limit.{u} : ∀ (x : WalkingCospan ⥤ Type u), HasLimit x := fun F =>
   let pt_right : pt ⟶ F.obj .right := fun X => X.val.snd
 
   ⟨⟨{
-    cone := {
-      pt := pt
-      π := {
-        app span := match span with
-          | .left => fun X => by
-            simp at X
-            exact X.val.fst
-          | .right => fun X => by
-            simp at X
-            exact X.val.snd
-          | .one => by
-            simp
-            exact pt_left ≫ hom_left
-        naturality {X Y} f := by
-          change WalkingCospan.Hom _ _ at f
-          cases f
-          rw [CategoryTheory.Limits.WidePullbackShape.hom_id]
-          repeat simp only [Functor.const_obj_obj,
-            Functor.const_obj_map, id_eq, Category.id_comp,
-            CategoryTheory.Functor.map_id, Category.comp_id]
-          case term j =>
-            cases j
-            rfl
-            ext a
-            simp only [types_comp_apply]
-            rw [a.property]
+      cone := {
+        pt := pt
+        π := {
+          app span := match span with
+            | .left => fun X => by
+              simp at X
+              exact X.val.fst
+            | .right => fun X => by
+              simp at X
+              exact X.val.snd
+            | .one => by
+              simp only [Functor.const_obj_obj]
+              exact pt_left ≫ hom_left
+          naturality {X Y} f := by
+            change WalkingCospan.Hom _ _ at f
+            simp only [Functor.const_obj_obj, Functor.const_obj_map, id_eq, Category.id_comp]
+            cases f
+            · rw [CategoryTheory.Limits.WidePullbackShape.hom_id]
+              simp only [CategoryTheory.Functor.map_id, Category.comp_id]
+            case term j =>
+              cases j
+              · rfl
+              ext a
+              simp only [types_comp_apply]
+              rw [a.property]
+        }
       }
-    }
+      isLimit := {
+        lift s point := match s with
+        | .mk pt' π' => by
+          change pt' at point
+          dsimp
+          let obj_left : F.obj WalkingCospan.left := π'.app .left point
+          let obj_right : F.obj WalkingCospan.right := π'.app .right point
+          let obj_one : F.obj WalkingCospan.one := π'.app .one point
+
+          let map_left := π'.naturality WalkingCospan.Hom.inl
+          let map_right := π'.naturality WalkingCospan.Hom.inr
+
+          simp at map_left
+          simp [map_left] at map_right
+
+          refine ⟨⟨obj_left, obj_right⟩, ?_⟩
+
+          change (π'.app WalkingCospan.left ≫ F.map WalkingCospan.Hom.inl) point  =
+                 (π'.app WalkingCospan.right ≫ F.map WalkingCospan.Hom.inr) point
+
+          rw [map_right]
+        fac := by
+          sorry
+      }
   }⟩⟩
 
 instance instHasPullbacks.{u} : HasPullbacks (Type u) where
