@@ -12,3 +12,41 @@ class Site'.{u, v} (C : Type v) [Category.{u, v} C] [HasPullbacks.{u, v} C] wher
       Presieve.bind U (fun {Y : C} {_f : Y ⟶ X} h => (R h).val) ∈ coverings X
   pullback {X Y : C} (f : Y ⟶ X) (U : Presieve X) (hU : U ∈ coverings X) :
     Presieve.pullbackArrows f U ∈ coverings Y
+
+namespace Site'
+
+@[simp]
+def of_pretopology.{u, v} {C : Type v} [Category.{u, v} C] [HasPullbacks.{u, v} C]
+  (pre : Pretopology C) : Site' C where
+  coverings := pre.coverings
+  iso {X Y} f h_iso := pre.has_isos f
+  trans {X} precov h_is_precov mk_left_cov := by
+    apply Pretopology.transitive pre precov
+    · exact h_is_precov
+    simp
+  pullback := @pre.pullbacks
+
+@[simp]
+def to_pretopology.{u, v} {C : Type v} [Category.{u, v} C] [HasPullbacks.{u, v} C]
+  (s : Site' C) : Pretopology C where
+  coverings := s.coverings
+  has_isos := @s.iso
+  pullbacks := @s.pullback
+  transitive X U R is_cov h := @s.trans X U is_cov
+    (fun Y f in_cov => { val := @R Y f in_cov, property := @h Y f in_cov })
+
+@[simp]
+def toGrothendieck.{u, v} {C : Type v} [Category.{u, v} C] [HasPullbacks.{u, v} C]
+  (s : Site' C) : GrothendieckTopology.{u, v} C :=
+  s.to_pretopology.toGrothendieck
+
+@[simp]
+theorem to_of_pretopology_eq.{u, v} {C : Type v} [Category.{u, v} C] [HasPullbacks.{u, v} C]
+  (pre : Pretopology C) : to_pretopology (of_pretopology pre) = pre := rfl
+
+instance equiv_pretopology.{u, v} {C : Type v} [Category.{u, v} C] [HasPullbacks.{u, v} C]
+  : Site' C ≃ Pretopology C where
+  toFun := to_pretopology
+  invFun := of_pretopology
+
+end Site'
