@@ -12,22 +12,21 @@ abbrev JointlySurjective.{u} {Y : Type u} (U : Precover Y)
 
 namespace JointlySurjective
 
-def has_limit.{u} : ∀ (x : WalkingCospan ⥤ Type u), HasLimit x
-  := fun F@{ obj, map, map_id, map_comp } =>
-  let hom_left : (obj .left) ⟶ (obj .one)   := map WalkingCospan.Hom.inl
-  let hom_right : (obj .right) ⟶ (obj .one) := map WalkingCospan.Hom.inr
+def has_limit.{u} : ∀ (x : WalkingCospan ⥤ Type u), HasLimit x := fun F =>
+  let hom_left : (F.obj .left) ⟶ (F.obj .one)   := F.map WalkingCospan.Hom.inl
+  let hom_right : (F.obj .right) ⟶ (F.obj .one) := F.map WalkingCospan.Hom.inr
 
-  let pt : Type u := { p : (obj .left) × (obj .right) // hom_left p.fst = hom_right p.snd }
+  let p_val_type := (F.obj .left) × (F.obj .right)
+  let pt : Type u := { p : p_val_type // hom_left p.fst = hom_right p.snd }
 
-  let pt_left : pt ⟶ obj .left := fun X => X.val.fst
-  let pt_right : pt ⟶ obj .right := fun X => X.val.snd
+  let pt_left : pt ⟶ F.obj .left := fun X => X.val.fst
+  let pt_right : pt ⟶ F.obj .right := fun X => X.val.snd
 
   ⟨⟨{
     cone := {
       pt := pt
       π := {
-        app span :=
-          match span with
+        app span := match span with
           | .left => fun X => by
             simp at X
             exact X.val.fst
@@ -37,6 +36,19 @@ def has_limit.{u} : ∀ (x : WalkingCospan ⥤ Type u), HasLimit x
           | .one => by
             simp
             exact pt_left ≫ hom_left
+        naturality {X Y} f := by
+          change WalkingCospan.Hom _ _ at f
+          cases f
+          rw [CategoryTheory.Limits.WidePullbackShape.hom_id]
+          repeat simp only [Functor.const_obj_obj,
+            Functor.const_obj_map, id_eq, Category.id_comp,
+            CategoryTheory.Functor.map_id, Category.comp_id]
+          case term j =>
+            cases j
+            rfl
+            ext a
+            simp only [types_comp_apply]
+            rw [a.property]
       }
     }
   }⟩⟩
