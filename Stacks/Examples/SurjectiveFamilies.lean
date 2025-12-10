@@ -92,7 +92,6 @@ def isLimit.fac.{u} (F : WalkingCospan ⥤ Type u) (s : Cone F)
 
 def isLimit.uniq.{u} (F : WalkingCospan ⥤ Type u) (s : Cone F) (m : s.pt ⟶ (cone F).pt)
   (h : (∀ (j : WalkingCospan), m ≫ (cone F).π.app j = s.π.app j)) : m = isLimit.lift F s := by
-  simp only [cone, π.app] at *
   ext a
   simp only [lift, cone]
   conv =>
@@ -115,16 +114,14 @@ def has_limit.{u} : ∀ (x : WalkingCospan ⥤ Type u), HasLimit x := fun F =>
       isLimit := {
         lift := isLimit.lift F
         fac := isLimit.fac F
-        uniq := by
-          
-          sorry
+        uniq := isLimit.uniq F
       }
   }⟩⟩
 
 end HasPullbacks
 
 instance instHasPullbacks.{u} : HasPullbacks (Type u) where
-  has_limit := sorry
+  has_limit := HasPullbacks.has_limit
 
 def SurjectiveFamiliesSite.{u} : Site (Type u) := {
   coverings X := setOf JointlySurjective
