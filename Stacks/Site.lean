@@ -45,13 +45,13 @@ def pretop_has_isos.{u, v} {C : Type v} [Category.{u, v} C] [HasPullbacks.{u, v}
     Presieve.singleton f ∈ Precoverage.coverings S.precoverage X := fun ⦃X Y⦄ f h_iso => by
   have h := S.iso f h_iso
   unfold Site.precoverage
-  simp
+  simp only [Set.mem_image]
   use {Over.mk f}
   constructor
   · exact h
   funext
   case h.right.h.h Y h =>
-    simp
+    simp only [Precover.to_presieve, Set.mem_singleton_iff, eq_iff_iff]
     constructor
     · intro h'
       cases h'
@@ -76,7 +76,8 @@ def pretop_has_pullbacks.{u, v} {C : Type v} [Category.{u, v} C] [HasPullbacks.{
   · exact h
   funext
   case refl.h.right.h.h Z g =>
-    simp
+    simp only [Precover.to_presieve, Over.mk_left, Functor.id_obj, Precover.of_presieve,
+      Functor.const_obj_obj, Set.mem_setOf_eq, Over.mk_hom, eq_iff_iff]
     constructor
     · intro ⟨ov, in_x, ov_eq⟩
       cases ov_eq
@@ -94,44 +95,7 @@ def pretop_transitive.{u, v} {C : Type v} [Category.{u, v} C] [HasPullbacks.{u, 
       Si ∈ S.precoverage.coverings X → (∀ ⦃Y⦄ (f) (H : Si f), Ti f H ∈ S.precoverage.coverings Y) →
       Si.bind Ti ∈ S.precoverage.coverings X :=
   fun ⦃X⦄ Si Ti ⟨pre, in_cov, heq⟩ mk_cov => by
-  simp [Site.precoverage] at *
-  cases heq
-  simp at Ti
-  change ⦃Y : C⦄ → (f : Y ⟶ X) → Over.mk f ∈ pre → Presieve Y at Ti
-  let h := S.trans pre in_cov (fun f in_cov => by
-    let ⟨cov, in_coverings, pre_eq⟩ := mk_cov f.hom (by simp; exact in_cov)
-    exists cov
-  )
-  simp at h
-  exists {x | ∃ f ∈ pre, ∃ cov ∈ S.coverings f.left, ∃ g ∈ cov, Over.mk (g.hom ≫ f.hom) = x}
-  constructor
-  · exact h
-  funext
-  case refl.right.h.h Z g =>
-    ext
-    constructor
-    intro h
-    simp at h
-    let ⟨ov, in_pre, cov_comp, is_cov_comp, ov_comp, ov_in_comp, ov_eq⟩ := h
-    let ⟨cov, in_coverings, pre_eq⟩ := mk_cov ov.hom (by simp [Precover.to_presieve]; exact in_pre)
-    simp at pre_eq
-    simp at cov
-    let ov_hom : ov.left ⟶ X := ov.hom
-    let ov_comp_hom : ov_comp.left ⟶ ov.left := ov_comp.hom
-    cases ov_eq
-    constructor
-    exists ov_comp_hom
-    exists ov_hom
-    exists in_pre
-    constructor
-    rw [← pre_eq]
-    
-    simp at in_coverings
-    simp [Precover.to_presieve] at pre_eq
-    rw [← pre_eq]
-    simp [Precover.to_presieve]
-    change ov_comp ∈ cov
-    
-    sorry
+  sorry
 
 end Site
+
