@@ -80,27 +80,66 @@ def pretop_pullbacks.{u, v} {C : Type v} [Category.{u, v} C] [HasPullbacks.{u, v
   let ⟨pre, in_cov, heq⟩ := hU
   let h := S.pullback (Over.mk f) pre in_cov
   refine ⟨{x | ∃ g ∈ pre, Over.mk (pullback.snd g.hom (Over.mk f).hom) = x}, h, ?_⟩
-  unfold Precover.to_presieve at heq
-  unfold Precover.to_presieve
   rw [← heq]
   funext Z j
   simp only [Over.mk_left, Functor.id_obj, Functor.const_obj_obj,
-    Over.mk_hom, Set.mem_setOf_eq, eq_iff_iff]
+    Over.mk_hom, eq_iff_iff]
   constructor
   · intro ⟨ov, in_pre, ov_eq⟩
     cases ov_eq
-    apply Presieve.pullbackArrows.mk
-    exact in_pre
+    exact Presieve.pullbackArrows.mk _ _ in_pre
   intro ⟨A, b, c⟩
-  refine ⟨Over.mk b, c, ?_⟩
-  rfl
+  exact ⟨Over.mk b, c, rfl⟩
 
-def to_site'.{u, v} {C : Type v} [Category.{u, v} C] [HasPullbacks.{u, v} C] (S : Site C) : Site' C where
+def pretop_trans.{u, v} {C : Type v} [Category.{u, v} C] [HasPullbacks.{u, v} C]
+  (S : Site C) {X : C} (U : Presieve X) (hU : U ∈ S.precoverage.coverings X)
+  (R : ⦃Y : C⦄ → ⦃f : Y ⟶ X⦄ → U f → { y // y ∈ S.precoverage.coverings Y }) :
+  (U.bind fun {Y} {_f} h ↦ ↑(R h)) ∈ S.precoverage.coverings X := by
+  let ⟨pre, in_cov, heq⟩ := hU
+  let h := S.trans pre in_cov (fun f in_pre => by
+    let choice : { y // y ∈ S.precoverage.coverings f.left } := R (by
+      rw [← heq]
+      unfold Precover.to_presieve
+      exact in_pre
+    )
+    let ⟨pre_left, ⟨in_cov, heq⟩⟩ := choice.property
+    exact ⟨pre_left, in_cov⟩
+  )
+  simp only [Functor.const_obj_obj, Functor.id_obj, exists_prop] at h
+  refine ⟨{x | ∃ f ∈ pre, ∃ cov ∈ S.coverings f.left, ∃ g ∈ cov, Over.mk (g.hom ≫ f.hom) = x},
+    h, ?_⟩
+  funext Y f
+  simp only [Precover.to_presieve, Functor.const_obj_obj,
+    Functor.id_obj, Set.mem_setOf_eq, eq_iff_iff]
+  constructor
+  intro ⟨a, in_pre', cov, in_cov_left, g, in_cov, comp_eq⟩
+  unfold Presieve.bind
+  let h : { y // y ∈ S.precoverage.coverings a.left } := R (by
+    rw [← heq]
+    unfold Precover.to_presieve
+    exact in_pre')
+
+  let ⟨pre_a_left, in_cov', heq'⟩ := h.property
+
+  cases comp_eq
+
+  refine ⟨_, g.hom, a.hom, (by
+    
+    sorry), ?_⟩
+  simp
+
+  change h.val g.hom
+  rw [← heq']
+  unfold Precover.to_presieve
+  change g ∈ pre_a_left
+  
+
+def to_site'.{u, v} {C : Type v} [Category.{u, v} C] [HasPullbacks.{u, v} C]
+  (S : Site C) : Site' C where
   coverings := precoverage S
   iso {X Y : C} := @pretop_has_isos _ _ _ S X Y
-  pullback {X Y : C} (f : Y ⟶ X) := by
-    
-    sorry
+  pullback := pretop_pullbacks S
+  trans := pretop_trans S
 
 end Site
 
