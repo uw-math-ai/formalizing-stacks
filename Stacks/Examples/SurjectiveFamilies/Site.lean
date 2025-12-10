@@ -8,6 +8,7 @@ import Stacks.Examples.SurjectiveFamilies.HasPullbacks
 
 open CategoryTheory
 open CategoryTheory.Limits
+open CategoryTheory.Limits.limit
 
 namespace JointlySurjective
 
@@ -34,7 +35,8 @@ def SurjectiveFamiliesSite.{u} : Site (Type u) := {
   coverings := coverings
   iso := iso
   trans {X} U U_jointly V x := by
-    simp
+    simp only [Functor.const_obj_obj, Functor.id_obj, exists_prop,
+      Set.mem_setOf_eq, ↓existsAndEq, and_true, Over.mk_left, Over.mk_hom, types_comp_apply]
     exact trans U U_jointly V x
   pullback {X} f U U_jointly_surjective y := by
     obtain ⟨g, g_in_U, x, f_y_is_g_x⟩ := U_jointly_surjective (f.hom y)
@@ -47,38 +49,63 @@ def SurjectiveFamiliesSite.{u} : Site (Type u) := {
 
     let pt := (pullback.cone g.hom f.hom).pt
 
-    let my_F : WalkingCospan ⥤ Type u := {
-      obj span := match span with
-        | .left => g.left
-        | .right => f.left
-        | .none => g.left × f.left
-      map {X Y : WalkingCospan} hom :=
-        match X, Y with
+    let my_F_obj : WalkingCospan → Type u
+      | .left => g.left
+      | .right => f.left
+      | .none => g.left × f.left
+
+    let my_F_map {X Y : WalkingCospan} (hom : X ⟶ Y) : (my_F_obj X ⟶ my_F_obj Y) :=
+      match X, Y with
         | .left, .left
         | .right, .right =>
           CategoryStruct.id _
         | .right, none => fun e => ⟨x, e⟩
         | .left, none => fun e => ⟨e, y⟩
         | none, none => CategoryStruct.id _
-      map_comp {X Y Z : WalkingCospan} (f : X ⟶ Y) (g : Y ⟶ Z) := by
-        change WalkingCospan.Hom _ _ at f
-        change WalkingCospan.Hom _ _ at g
-        cases f
-        cases g
-        simp
+
+    have my_F_map_comp {X Y Z : WalkingCospan} (f : X ⟶ Y) (g : Y ⟶ Z) :
+      my_F_map (f ≫ g) = my_F_map f ≫ my_F_map g := by
+      unfold my_F_map at *
+      change WalkingCospan.Hom _ _ at f
+      change WalkingCospan.Hom _ _ at g
+      cases f
+      cases g
+      · simp only [WidePullbackShape.hom_id, Category.comp_id]
         cases X
-        simp
+        · simp only [Category.comp_id]
         case id.id.some val =>
           cases val
           repeat simp
-        simp
+      · simp only [WidePullbackShape.hom_id, Category.id_comp]
         case id.term j =>
           cases j
           repeat simp
-        case term j =>
-          cases g
-          simp
+      case term j =>
+        cases g
+        simp only [WidePullbackShape.hom_id, Category.comp_id]
+
+    let my_F : WalkingCospan ⥤ Type u := {
+      obj := my_F_obj
+      map := my_F_map
+      map_comp := my_F_map_comp
     }
+
+    let cone := limit.cone my_F
+
+    let h := @pullback.lift _ _ _ _ _ _ g.hom f.hom _ (cone.π.app .left) (cone.π.app .right) (by
+      have nat_left := cone.π.naturality (CategoryStruct.id .left)
+      have nat_right := cone.π.naturality (CategoryStruct.id .right)
+
+      change _ = cone.π.app WalkingCospan.left ≫ my_F_map (𝟙 WalkingCospan.left) at nat_left
+      change _ = cone.π.app WalkingCospan.right ≫ my_F_map (𝟙 WalkingCospan.right) at nat_right
+
+      simp only [Functor.const_obj_obj, Functor.const_obj_map, Category.id_comp] at nat_left
+      simp? at nat_right
+
+      rw [nat_left, nat_right]
+      
+      sorry
+    )
 
     sorry
 }
