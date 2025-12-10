@@ -40,99 +40,17 @@ def SurjectiveFamiliesSite.{u} : Site (Type u) := {
     exact trans U U_jointly V x
   pullback {X} f U U_jointly_surjective y := by
     obtain ⟨g, g_in_U, x, f_y_is_g_x⟩ := U_jointly_surjective (f.hom y)
-    simp only [Functor.id_obj, Functor.const_obj_obj, Set.mem_setOf_eq,
-      exists_exists_and_eq_and, Over.mk_left, Over.mk_hom]
-    refine ⟨g, g_in_U, ?_⟩
-
-    let left : pullback g.hom f.hom ⟶ g.left := pullback.fst g.hom f.hom
-    let right : pullback g.hom f.hom ⟶ f.left := pullback.snd g.hom f.hom
-
-    let pt := (pullback.cone g.hom f.hom).pt
-
-    let my_F_obj : WalkingCospan → Type u
-      | .left => g.left
-      | .right => f.left
-      | .none => g.left × f.left
-
-    let my_F_map {X Y : WalkingCospan} (hom : X ⟶ Y) : (my_F_obj X ⟶ my_F_obj Y) :=
-      match X, Y with
-        | .left, .left
-        | .right, .right =>
-          CategoryStruct.id _
-        | .right, none => fun e => ⟨x, e⟩
-        | .left, none => fun e => ⟨e, y⟩
-        | none, none => CategoryStruct.id _
-
-    have my_F_map_comp {X Y Z : WalkingCospan} (f : X ⟶ Y) (g : Y ⟶ Z) :
-      my_F_map (f ≫ g) = my_F_map f ≫ my_F_map g := by
-      unfold my_F_map at *
-      change WalkingCospan.Hom _ _ at f
-      change WalkingCospan.Hom _ _ at g
-      cases f
-      cases g
-      · simp only [WidePullbackShape.hom_id, Category.comp_id]
-        cases X
-        · simp only [Category.comp_id]
-        case id.id.some val =>
-          cases val
-          repeat simp
-      · simp only [WidePullbackShape.hom_id, Category.id_comp]
-        case id.term j =>
-          cases j
-          repeat simp
-      case term j =>
-        cases g
-        simp only [WidePullbackShape.hom_id, Category.comp_id]
-
-    let my_F : WalkingCospan ⥤ Type u := {
-      obj := my_F_obj
-      map := my_F_map
-      map_comp := my_F_map_comp
-    }
-
-    let cone := limit.cone my_F
-
-    let h := @pullback.lift _ _ _ _ _ _ g.hom f.hom _ (cone.π.app .left) (cone.π.app .right) (by
-      have nat_left := cone.π.naturality (CategoryStruct.id .left)
-      have nat_right := cone.π.naturality (CategoryStruct.id .right)
-
-      change _ = cone.π.app WalkingCospan.left ≫ my_F_map (𝟙 WalkingCospan.left) at nat_left
-      change _ = cone.π.app WalkingCospan.right ≫ my_F_map (𝟙 WalkingCospan.right) at nat_right
-
-      unfold my_F_map at nat_left
-      unfold my_F_map at nat_right
-
-      simp at nat_left
-      simp at nat_right
-
-      rw [nat_left, nat_right]
-
-      unfold my_F_map
-      simp only [Functor.const_obj_obj, Functor.id_obj, Category.assoc]
-      unfold my_F_obj
-      simp only
-      conv =>
-        left
-        right
-        rw [Category.id_comp]
-        rfl
-      conv =>
-        right
-        right
-        rw [Category.id_comp]
-        rfl
-      ext a
-      change (cone.π.app WalkingCospan.left ≫ g.hom) a = (cone.π.app WalkingCospan.right ≫ f.hom) a
-      simp?
-      let o := cone.π.app WalkingCospan.left a
-      unfold my_F at o
-      unfold my_F_obj at o
-      simp at o
-      
-      sorry
-    )
-
-    sorry
+    use Over.mk <| pullback.snd g.hom f.hom
+    simp only [Functor.id_obj, Functor.const_obj_obj, Set.mem_setOf_eq, Over.mk_left, Over.mk_hom]
+    let mk_pb : X ⟶ pullback g.hom f.hom := @pullback.lift _ _ X _ _ _ g.hom f.hom _
+      (Function.const _ x) (Function.const _ y) (by
+        ext
+        exact f_y_is_g_x.symm
+      )
+    constructor
+    · use g
+    use mk_pb (f.hom y)
+    simp [mk_pb]
 }
 
 end JointlySurjective
