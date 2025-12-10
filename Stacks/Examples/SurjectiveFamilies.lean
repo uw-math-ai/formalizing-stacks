@@ -130,18 +130,15 @@ def SurjectiveFamiliesSite.{u} : Site (Type u) := {
     refine ⟨by simp, inv f x, by
       change x = (inv f ≫ f) x
       rw [(CategoryTheory.inv_comp_eq_id f).mpr]
-      repeat rfl⟩      
-  trans U U_jointly_surjective V y := by
-    obtain ⟨ f, f_in_U, x, y_is_f_x ⟩ := U_jointly_surjective y
-    obtain ⟨ g, g_in_V_f, z, x_is_g_z ⟩ := (V f f_in_U).property x
-    exists (Over.mk (g.hom ≫ f.hom))
-    apply And.intro
-    · exists f
-      exists f_in_U
-      exists g
-    · exists z
-      simp
-      rw [y_is_f_x, x_is_g_z]
+      repeat rfl⟩
+  trans {X} U U_jointly_surjective V x := by
+    simp only [Functor.const_obj_obj,
+      Functor.id_obj, exists_prop, Set.mem_setOf_eq, ↓existsAndEq, and_true,
+      Over.mk_left, Over.mk_hom, types_comp_apply]
+    let ⟨f, f_in_U, x, y_is_f_x⟩ := U_jointly_surjective x
+    let ⟨cov, is_joint_surj⟩ := V f f_in_U
+    let ⟨g, in_cov, g_left, heq⟩ := is_joint_surj x
+    refine ⟨f, cov, g, ⟨f_in_U, is_joint_surj, in_cov⟩, (by use g_left; simp_all)⟩
   pullback f U U_jointly_surjective y := by
     obtain ⟨ g, g_in_U, x, f_y_is_g_x ⟩ := U_jointly_surjective (f.hom y)
     exists Over.mk pullback.snd g.hom f.hom
