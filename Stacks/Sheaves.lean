@@ -14,4 +14,3 @@ def IsSheaf.{u₁, u₂, v₁, v₂} {C : Type v₁} {A : Type v₂}
   [Category.{u₁, v₁} C] [Category.{u₂, v₂} A] [HasPullbacks C]
   (s : Site' C)
   (F : Presheaf.{u₁, u₂, v₁, v₂} C A) := Presheaf.IsSheaf s.toGrothendieck F
-
