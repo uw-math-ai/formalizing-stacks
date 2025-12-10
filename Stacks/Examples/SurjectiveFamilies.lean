@@ -141,17 +141,23 @@ def SurjectiveFamiliesSite.{u} : Site (Type u) := {
     exact ⟨f, cov, g, ⟨f_in_U, is_joint_surj, in_cov⟩, ⟨g_left, by simp_all⟩⟩
   pullback {X} f U U_jointly_surjective y := by
     obtain ⟨g, g_in_U, x, f_y_is_g_x⟩ := U_jointly_surjective (f.hom y)
+    simp at U_jointly_surjective
+    change U_jointly_surjective g at g_in_U
+    
+    have h := g_in_U
     simp only [Functor.id_obj, Functor.const_obj_obj, Set.mem_setOf_eq,
       exists_exists_and_eq_and, Over.mk_left, Over.mk_hom]
     refine ⟨g, g_in_U, ?_⟩
 
-    let hom_y_to_hom_x : f.left ⟶ g.left := fun e => x
+    let left : pullback g.hom f.hom ⟶ g.left := pullback.fst g.hom f.hom
+    let right : pullback g.hom f.hom ⟶ f.left := pullback.snd g.hom f.hom
+
+    let hom_y_to_hom_x : f.left ⟶ g.left := fun e => by
+      
+      g.hom e
     let hom_x_to_hom_y : g.left ⟶ f.left := fun e => y
 
-    let left : pullback g.hom f.hom → g.left := pullback.fst g.hom f.hom
-    let right : pullback g.hom f.hom → f.left := pullback.snd g.hom f.hom
-
-    let lifted : pullback g.hom f.hom := pullback.lift (by sorry)
+    let lifted : pullback g.hom f.hom := @pullback.lift _ _ _ _ _ _ g.hom f.hom _ (hom_y_to_hom_x) (CategoryStruct.id _) (by unfold hom_y_to_hom_x; simp; sorry)
     sorry
 }
 
