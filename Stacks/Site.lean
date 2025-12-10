@@ -1,4 +1,5 @@
 import Mathlib
+import Stacks.Site2Mathlib
 
 open CategoryTheory
 open CategoryTheory.Limits
@@ -20,17 +21,36 @@ structure Site.{u, v} (C : Type v) [Category.{u, v} C] [HasPullbacks.{u, v} C] w
 namespace Precover
 
 @[simp]
-def to_presieve.{u, v} {C : Type v} [Category.{u, v} C] (X : C) (p : Precover X) : Presieve X :=
-  fun ⦃Y : C⦄ => { f : Y ⟶ X | Over.mk f ∈ p }
+def to_presieve.{u, v} {C : Type v} [Category.{u, v} C] (X : C) (pre : Precover X) : Presieve X :=
+  fun ⦃Y⦄ => { f : Y ⟶ X | Over.mk f ∈ pre }
 
 @[simp]
-def of_presieve.{u, v} {C : Type v} [Category.{u, v} C] (X : C) (P : Presieve X) : Precover X :=
-  { ov | ov.hom ∈ @P ov.left }
+def of_presieve.{u, v} {C : Type v} [Category.{u, v} C] (X : C) (pre : Presieve X) : Precover X :=
+  (Over.mk ·.snd)  '' pre.uncurry
 
 def equiv_presieve_precov.{u, v} {C : Type v} [Category.{u, v} C]
   (X : C) : Presieve X ≃ Precover X where
   toFun := of_presieve X
   invFun := to_presieve X
+  left_inv P := by
+    simp only [of_presieve]
+    funext Y f
+    simp only [to_presieve, Set.mem_image, Sigma.exists, eq_iff_iff]
+    constructor
+    · intro ⟨a, b, h, heq⟩
+      cases heq
+      · exact h
+    intro h
+    exact ⟨_, f, h, rfl⟩
+  right_inv P := by
+    funext f
+    rw [eq_iff_iff]
+    constructor
+    · intro ⟨w, h, ov_eq⟩
+      rw [← ov_eq]
+      exact h
+    intro h
+    refine ⟨⟨f.left, f.hom⟩, h, rfl⟩
 
 end Precover
 
@@ -43,15 +63,9 @@ instance precoverage.{u, v} {C : Type v} [Category.{u, v} C] [HasPullbacks.{u, v
 def pretop_has_isos.{u, v} {C : Type v} [Category.{u, v} C] [HasPullbacks.{u, v} C]
   (S : Site C) : ∀ ⦃X Y : C⦄ (f : Y ⟶ X) [IsIso f],
     Presieve.singleton f ∈ Precoverage.coverings S.precoverage X := fun ⦃X Y⦄ f h_iso => by
-  have h := S.iso f h_iso
-  unfold Site.precoverage
-  simp only [Set.mem_image]
-  use {Over.mk f}
-  constructor
-  · exact h
+  refine ⟨{Over.mk f}, S.iso f h_iso, ?_⟩
   funext
-  case h.right.h.h Y h =>
-    simp only [Precover.to_presieve, Set.mem_singleton_iff, eq_iff_iff]
+  · rw [eq_iff_iff]
     constructor
     · intro h'
       cases h'
@@ -60,42 +74,33 @@ def pretop_has_isos.{u, v} {C : Type v} [Category.{u, v} C] [HasPullbacks.{u, v}
     cases h'
     rfl
 
-def pretop_has_pullbacks.{u, v} {C : Type v} [Category.{u, v} C] [HasPullbacks.{u, v} C]
-  (S : Site C) :
-    ∀ ⦃X Y : C⦄ (f : Y ⟶ X) (Si), Si ∈ S.precoverage.coverings X
-      → Presieve.pullbackArrows f Si ∈ S.precoverage.coverings Y :=
-      fun ⦃X Y⦄ f Si ⟨x, in_coverings, h_eq⟩ => by
-  -- Set of all pullback overs that should be in coverings Y from the Site's perspective
-  have h := S.pullback (Over.mk f) (Precover.of_presieve X Si) (by
-    cases h_eq
-    exact in_coverings
-  )
-  cases h_eq
+def pretop_pullbacks.{u, v} {C : Type v} [Category.{u, v} C] [HasPullbacks.{u, v} C]
+  (S : Site C) {X Y : C} (f : Y ⟶ X) (U : Presieve X) (hU : U ∈ S.precoverage.coverings X) :
+  Presieve.pullbackArrows f U ∈ S.precoverage.coverings Y := by
+  let ⟨pre, in_cov, heq⟩ := hU
+  let h := S.pullback (Over.mk f) pre in_cov
+  refine ⟨{x | ∃ g ∈ pre, Over.mk (pullback.snd g.hom (Over.mk f).hom) = x}, h, ?_⟩
+  unfold Precover.to_presieve at heq
+  unfold Precover.to_presieve
+  rw [← heq]
+  funext Z j
+  simp only [Over.mk_left, Functor.id_obj, Functor.const_obj_obj,
+    Over.mk_hom, Set.mem_setOf_eq, eq_iff_iff]
   constructor
-  constructor
-  · exact h
-  funext
-  case refl.h.right.h.h Z g =>
-    simp only [Precover.to_presieve, Over.mk_left, Functor.id_obj, Precover.of_presieve,
-      Functor.const_obj_obj, Set.mem_setOf_eq, Over.mk_hom, eq_iff_iff]
-    constructor
-    · intro ⟨ov, in_x, ov_eq⟩
-      cases ov_eq
-      constructor
-      · exact in_x
-    intro ⟨A, j, h⟩
-    change Over.mk (Over.mk j).hom ∈ x at h
-    constructor
-    constructor
-    · exact h
-    rfl
+  · intro ⟨ov, in_pre, ov_eq⟩
+    cases ov_eq
+    apply Presieve.pullbackArrows.mk
+    exact in_pre
+  intro ⟨A, b, c⟩
+  refine ⟨Over.mk b, c, ?_⟩
+  rfl
 
-def pretop_transitive.{u, v} {C : Type v} [Category.{u, v} C] [HasPullbacks.{u, v} C] (S : Site C) :
-  ∀ ⦃X : C⦄ (Si : Presieve X) (Ti : ∀ ⦃Y⦄ (f : Y ⟶ X), Si f → Presieve Y),
-      Si ∈ S.precoverage.coverings X → (∀ ⦃Y⦄ (f) (H : Si f), Ti f H ∈ S.precoverage.coverings Y) →
-      Si.bind Ti ∈ S.precoverage.coverings X :=
-  fun ⦃X⦄ Si Ti ⟨pre, in_cov, heq⟩ mk_cov => by
-  sorry
+def to_site'.{u, v} {C : Type v} [Category.{u, v} C] [HasPullbacks.{u, v} C] (S : Site C) : Site' C where
+  coverings := precoverage S
+  iso {X Y : C} := @pretop_has_isos _ _ _ S X Y
+  pullback {X Y : C} (f : Y ⟶ X) := by
+    
+    sorry
 
 end Site
 
