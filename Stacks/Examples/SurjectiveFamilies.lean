@@ -90,12 +90,34 @@ def isLimit.fac.{u} (F : WalkingCospan ⥤ Type u) (s : Cone F)
     cases val
     repeat (ext; simp)
 
+def isLimit.uniq.{u} (F : WalkingCospan ⥤ Type u) (s : Cone F) (m : s.pt ⟶ (cone F).pt)
+  (h : (∀ (j : WalkingCospan), m ≫ (cone F).π.app j = s.π.app j)) : m = isLimit.lift F s := by
+  simp only [cone, π.app] at *
+  ext a
+  simp only [lift, cone]
+  conv =>
+    right
+    left
+    left
+    rw [← h .left]
+    rfl
+  conv =>
+    right
+    left
+    right
+    rw [← h .right]
+    rfl
+  rfl
+
 def has_limit.{u} : ∀ (x : WalkingCospan ⥤ Type u), HasLimit x := fun F =>
   ⟨⟨{
       cone := cone F
       isLimit := {
         lift := isLimit.lift F
         fac := isLimit.fac F
+        uniq := by
+          
+          sorry
       }
   }⟩⟩
 
