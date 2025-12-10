@@ -125,15 +125,12 @@ instance instHasPullbacks.{u} : HasPullbacks (Type u) where
 
 def SurjectiveFamiliesSite.{u} : Site (Type u) := {
   coverings X := setOf JointlySurjective
-  iso f hf y := by
+  iso {X Y : Type u} (f : Y ⟶ X) (hf : IsIso f) x := by
     exists Over.mk f
-    constructor
-    · rfl
-    · exists inv f y
-      simp
-      have p := (comp_apply (inv f) f y)
-      simp at p
-      exact p
+    refine ⟨by simp, inv f x, by
+      change x = (inv f ≫ f) x
+      rw [(CategoryTheory.inv_comp_eq_id f).mpr]
+      repeat rfl⟩      
   trans U U_jointly_surjective V y := by
     obtain ⟨ f, f_in_U, x, y_is_f_x ⟩ := U_jointly_surjective y
     obtain ⟨ g, g_in_V_f, z, x_is_g_z ⟩ := (V f f_in_U).property x
