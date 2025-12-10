@@ -12,97 +12,101 @@ abbrev JointlySurjective.{u} {Y : Type u} (U : Precover Y)
 
 namespace JointlySurjective
 
+namespace HasPullbacks
+
+@[simp]
+def cone.pt.t_p.{u} (F : WalkingCospan ⥤ Type u) : Type u :=
+  (F.obj .left) × (F.obj .right)
+
+@[simp]
+def cone_pt.{u} (F : WalkingCospan ⥤ Type u) : Type u := {
+  p : cone.pt.t_p F // F.map WalkingCospan.Hom.inl p.fst = F.map WalkingCospan.Hom.inr p.snd }
+
+@[simp]
+def π.app.{u} (F : WalkingCospan ⥤ Type u) (span : WalkingCospan) :
+  ((Functor.const WalkingCospan).obj (cone_pt F)).obj span ⟶ F.obj span :=
+  match span with
+  | .left => fun X => by
+    simp at X
+    exact X.val.fst
+  | .right => fun X => by
+    simp at X
+    exact X.val.snd
+  | .one => by
+    simp only [Functor.const_obj_obj]
+    exact (fun X => X.val.fst) ≫ F.map WalkingCospan.Hom.inl
+
+def π.naturality.{u} (F : WalkingCospan ⥤ Type u)
+  ⦃X Y : WalkingCospan⦄
+  (f : X ⟶ Y) :
+  ((Functor.const WalkingCospan).obj (cone_pt F)).map f ≫ π.app F Y = π.app F X ≫ F.map f := by
+  unfold π.app at *
+  change WalkingCospan.Hom _ _ at f
+  simp only [Functor.const_obj_obj, Functor.const_obj_map, Category.id_comp]
+  cases f
+  · rw [CategoryTheory.Limits.WidePullbackShape.hom_id]
+    simp only [CategoryTheory.Functor.map_id, Category.comp_id]
+  case term j =>
+    cases j
+    · rfl
+    ext a
+    let f_eq : F.map WalkingCospan.Hom.inl a.val.fst = F.map WalkingCospan.Hom.inr a.val.snd :=
+      a.property
+    simp only [cone_pt, cone.pt.t_p, id_eq, types_comp_apply, f_eq]
+
+def cone.{u} (F : WalkingCospan ⥤ Type u) : Cone F where
+  pt := cone_pt F
+  π := {
+    app := π.app F
+    naturality := π.naturality F
+  }
+
+def isLimit.lift.{u} (F : WalkingCospan ⥤ Type u) (s : Cone F) (point : s.pt) : (cone F).pt :=
+  match s with
+  | .mk pt' π' => by
+    let map_left := π'.naturality WalkingCospan.Hom.inl
+    let map_right := π'.naturality WalkingCospan.Hom.inr
+    simp at map_left
+    simp only [Functor.const_obj_obj, Functor.const_obj_map,
+      map_left, Category.id_comp] at map_right
+    refine ⟨⟨π'.app .left point, π'.app .right point⟩, ?_⟩
+    change (π'.app WalkingCospan.left ≫ F.map WalkingCospan.Hom.inl) point  =
+           (π'.app WalkingCospan.right ≫ F.map WalkingCospan.Hom.inr) point
+    rw [map_right]
+
+def isLimit.fac.{u} (F : WalkingCospan ⥤ Type u) (s : Cone F)
+  (span : WalkingCospan) : isLimit.lift F s ≫ (cone F).π.app span = s.π.app span := by
+  unfold lift
+  unfold cone
+  simp only [cone_pt, cone.pt.t_p, Functor.const_obj_obj, π.app, id_eq]
+  cases span
+  ext
+  case none.h a =>
+    simp only [types_comp_apply]
+    change (s.π.app WalkingCospan.left ≫ F.map WalkingCospan.Hom.inl) a = s.π.app none a
+    rw [← s.π.naturality WalkingCospan.Hom.inl]
+    simp only [Functor.const_obj_obj, Functor.const_obj_map, types_comp_apply, types_id_apply]
+  case some val =>
+    cases val
+    simp only
+    ext
+    · simp
+    ext
+    · simp
+
 def has_limit.{u} : ∀ (x : WalkingCospan ⥤ Type u), HasLimit x := fun F =>
-  let hom_left : (F.obj .left) ⟶ (F.obj .one)   := F.map WalkingCospan.Hom.inl
-  let hom_right : (F.obj .right) ⟶ (F.obj .one) := F.map WalkingCospan.Hom.inr
-
-  let p_val_type := (F.obj .left) × (F.obj .right)
-  let pt : Type u := { p : p_val_type // hom_left p.fst = hom_right p.snd }
-
-  let pt_left : pt ⟶ F.obj .left := fun X => X.val.fst
-  let pt_right : pt ⟶ F.obj .right := fun X => X.val.snd
-
   ⟨⟨{
-      cone := {
-        pt := pt
-        π := {
-          app span := match span with
-            | .left => fun X => by
-              simp at X
-              exact X.val.fst
-            | .right => fun X => by
-              simp at X
-              exact X.val.snd
-            | .one => by
-              simp only [Functor.const_obj_obj]
-              exact pt_left ≫ hom_left
-          naturality {X Y} f := by
-            change WalkingCospan.Hom _ _ at f
-            simp only [Functor.const_obj_obj, Functor.const_obj_map, id_eq, Category.id_comp]
-            cases f
-            · rw [CategoryTheory.Limits.WidePullbackShape.hom_id]
-              simp only [CategoryTheory.Functor.map_id, Category.comp_id]
-            case term j =>
-              cases j
-              · rfl
-              ext a
-              simp only [types_comp_apply]
-              rw [a.property]
-        }
-      }
+      cone := cone F
       isLimit := {
-        lift s point := match s with
-        | .mk pt' π' => by
-          let map_left := π'.naturality WalkingCospan.Hom.inl
-          let map_right := π'.naturality WalkingCospan.Hom.inr
-
-          simp at map_left
-          simp [map_left] at map_right
-
-          refine ⟨⟨π'.app .left point, π'.app .right point⟩, ?_⟩
-
-          change (π'.app WalkingCospan.left ≫ F.map WalkingCospan.Hom.inl) point  =
-                 (π'.app WalkingCospan.right ≫ F.map WalkingCospan.Hom.inr) point
-
-          rw [map_right]
-        fac s span := by
-          simp only [Functor.const_obj_obj, id_eq]
-          unfold hom_left
-          unfold hom_right
-          cases span
-          ext
-          simp
-          simp [pt_left]
-          
+        lift := isLimit.lift F
+        fac := isLimit.fac F
       }
   }⟩⟩
 
+end HasPullbacks
+
 instance instHasPullbacks.{u} : HasPullbacks (Type u) where
-  has_limit := fun F@{ obj, map, map_id, map_comp } => ⟨⟨
-    let hom_left : (obj .left) ⟶ (obj .one)   := map WalkingCospan.Hom.inl
-    let hom_right : (obj .right) ⟶ (obj .one) := map WalkingCospan.Hom.inr
-
-    let pt : Type u :=
-      { p : (obj .left) × (obj .right) // hom_left p.fst = hom_right p.snd }
-
-    {
-      cone := {
-        pt := pt
-        π := {
-          app span X :=
-            match span with
-            | .left => by
-              simp at X
-              exact X.val.fst
-            | .right => by
-              sorry
-            | .one => by
-              simp only [Functor.const_obj_obj]
-              sorry
-        }
-      }
-    }
-    sorry⟩⟩
+  has_limit := sorry
 
 def SurjectiveFamiliesSite.{u} : Site (Type u) := {
   coverings X := setOf JointlySurjective
